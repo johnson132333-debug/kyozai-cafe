@@ -1,0 +1,3 @@
+# Google AdSenseの審査に通ったら、AdSense管理画面に表示される1行を
+# ここに追加してください（例）:
+# google.com, pub-xxxxxxxxxxxxxxxx, DIRECT, f08c47fec0942fa0
