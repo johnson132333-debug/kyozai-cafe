@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多角形の角の和を考えよう</title>
+<style>
+  :root{
+    --cream:#FBF6EC;
+    --ink:#2E3440;
+    --sky:#4F8FBF;
+    --sky-dark:#376C96;
+    --clay:#E08A4E;
+    --clay-dark:#C06A2E;
+    --leaf:#6FA96B;
+    --leaf-dark:#4F8A4B;
+    --gold:#E8B84B;
+    --gold-dark:#C79626;
+    --panel:#FFFFFF;
+    --line:#D9D2C2;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:"Hiragino Maru Gothic ProN","Yu Gothic",-apple-system,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    overflow:hidden;
+  }
+  #app{ width:100vw; height:100vh; position:relative; }
+
+  #title-screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:36px;
+    background:
+      radial-gradient(circle at 20% 20%, #FFF6E4 0%, transparent 45%),
+      radial-gradient(circle at 80% 80%, #E9F4FB 0%, transparent 45%),
+      var(--cream);
+  }
+  #title-screen h1{
+    font-size:clamp(28px, 5.5vw, 52px);
+    margin:0;
+    letter-spacing:.04em;
+    color:var(--sky-dark);
+    text-align:center;
+    text-shadow: 3px 3px 0 #fff;
+  }
+  #title-shape{ width:min(50vw,320px); }
+  #start-btn{
+    font-size:26px;
+    font-weight:700;
+    padding:18px 56px;
+    border:none;
+    border-radius:999px;
+    background:var(--clay);
+    color:#fff;
+    box-shadow:0 6px 0 var(--clay-dark);
+    cursor:pointer;
+    transition:transform .08s;
+  }
+  #start-btn:active{ transform:translateY(6px); box-shadow:0 0 0 var(--clay-dark); }
+
+  #work-screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    background:var(--cream);
+  }
+  header{
+    padding:14px 24px;
+    font-size:22px;
+    font-weight:700;
+    color:var(--sky-dark);
+    text-align:center;
+    background:var(--panel);
+    border-bottom:3px solid var(--line);
+    flex:0 0 auto;
+  }
+  #canvas-wrap{
+    flex:1 1 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:12px;
+    min-height:0;
+    position:relative;
+  }
+  #canvas{
+    width:100%;
+    height:100%;
+    max-width:900px;
+    background:#fff;
+    border:3px solid var(--line);
+    border-radius:18px;
+  }
+  .vertex{ cursor:pointer;
+    transition: all 0.15s ease-out; }
+  .vertex circle{ fill:#fff; stroke:var(--sky-dark); stroke-width:3; }
+  .vertex:hover circle{ fill:#E9F4FB; }
+  .vertex.chosen circle{ fill:var(--clay); stroke:var(--clay-dark); }
+  .vertex text{
+    font-size:15px; font-weight:700; fill:var(--sky-dark);
+    text-anchor:middle; dominant-baseline:middle; pointer-events:none;
+  }
+  .vertex.chosen text{ fill:#fff; }
+  .poly-outline{ fill:none; stroke:var(--sky-dark); stroke-width:3; }
+  .tri{ stroke:#fff; stroke-width:2; opacity:0.85; }
+
+  #result-panel{
+    position:absolute;
+    top:16px; left:50%; transform:translateX(-50%);
+    background:rgba(255,255,255,0.95);
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:10px 20px;
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
+    text-align:center;
+    box-shadow:0 4px 14px rgba(15,23,42,0.1);
+    display:none;
+  }
+  #result-panel .big{ font-size:22px; color:var(--clay-dark); }
+
+  #toolbar{
+    flex:0 0 auto;
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    flex-wrap:wrap;
+    padding:14px 16px;
+    background:var(--panel);
+    border-top:3px solid var(--line);
+  }
+  .tool-group{
+    display:flex;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:20px;
+    background:#F7F3EA;
+    border:2px solid var(--line);
+    align-items:center;
+  }
+  .tool-group .label{ font-size:12px; font-weight:700; color:#94a3b8; padding:0 4px; }
+  .poly-btn{
+    font-size:14px;
+    font-weight:700;
+    padding:9px 14px;
+    border:none;
+    border-radius:14px;
+    background:var(--leaf);
+    color:#fff;
+    box-shadow:0 4px 0 var(--leaf-dark);
+    cursor:pointer;
+    transition: all 0.15s ease-out;
+  }
+  .poly-btn:active{ transform:translateY(4px); box-shadow:0 0 0 var(--leaf-dark); }
+  .poly-btn.active{ background:var(--sky); box-shadow:0 4px 0 var(--sky-dark); }
+  .reset-btn{
+    font-size:14px;
+    font-weight:700;
+    padding:9px 14px;
+    border:none;
+    border-radius:14px;
+    background:var(--clay);
+    color:#fff;
+    box-shadow:0 4px 0 var(--clay-dark);
+    cursor:pointer;
+    transition: all 0.15s ease-out;
+  }
+  .reset-btn:active{ transform:translateY(4px); box-shadow:0 0 0 var(--clay-dark); }
+
+  #notes-section{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:10px 22px;
+    background:var(--panel);
+    border-top:3px solid var(--line);
+  }
+  #notes-label{ font-size:16px; font-weight:700; color:var(--sky-dark); white-space:nowrap; }
+  #notes-text{
+    flex:1 1 auto;
+    min-height:44px;
+    max-height:100px;
+    resize:vertical;
+    font-size:17px; line-height:1.6;
+    padding:10px 14px; border-radius:12px; border:2px solid var(--line);
+    font-family:inherit;
+    background:#FFFDF8;
+  }
+  #notes-text:focus{ outline:3px solid var(--gold); border-color:var(--gold-dark); }
+
+  #hint{
+    position:fixed;
+    bottom:170px; left:50%; transform:translateX(-50%);
+    background:rgba(46,52,64,0.85);
+    color:#fff;
+    padding:8px 18px;
+    border-radius:999px;
+    font-size:14px;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .3s;
+    text-align:center;
+    max-width:80vw;
+  }
+  #hint.show{ opacity:1; }
+
+  button:focus-visible, [tabindex]:focus-visible, textarea:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section id="title-screen">
+    <h1>多角形の角の和を<br>考えよう！</h1>
+    <svg id="title-shape" viewBox="0 0 300 200">
+      <polygon points="150,20 260,80 220,180 80,180 40,80"
+               fill="#7FB8DE" stroke="#2E5C7A" stroke-width="6" stroke-linejoin="round"/>
+      <line x1="150" y1="20" x2="220" y2="180" stroke="#fff" stroke-width="3"/>
+      <line x1="150" y1="20" x2="80" y2="180" stroke="#fff" stroke-width="3"/>
+    </svg>
+    <button id="start-btn">はじめる</button>
+  </section>
+
+  <section id="work-screen" hidden>
+    <header>多角形の角の和を考えよう</header>
+    <div id="canvas-wrap">
+      <svg id="canvas" viewBox="0 0 900 560"></svg>
+      <div id="result-panel"></div>
+    </div>
+    <div id="toolbar">
+      <div class="tool-group">
+        <span class="label">図形</span>
+        <button class="poly-btn" data-n="4">四角形</button>
+        <button class="poly-btn active" data-n="5">五角形</button>
+        <button class="poly-btn" data-n="6">六角形</button>
+        <button class="poly-btn" data-n="7">七角形</button>
+      </div>
+      <button class="reset-btn" id="reset-btn">↺ 頂点をえらびなおす</button>
+    </div>
+    <div id="notes-section">
+      <span id="notes-label">気づいたこと</span>
+      <textarea id="notes-text" placeholder="気づいたことを書いてみよう"></textarea>
+    </div>
+  </section>
+
+  <div id="hint">頂点を1つタップしてみよう</div>
+
+</div>
+
+<script>
+(function(){
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const titleScreen = document.getElementById('title-screen');
+  const workScreen = document.getElementById('work-screen');
+  const startBtn = document.getElementById('start-btn');
+  const canvas = document.getElementById('canvas');
+  const resultPanel = document.getElementById('result-panel');
+  const hint = document.getElementById('hint');
+  const notesText = document.getElementById('notes-text');
+  const polyButtons = document.querySelectorAll('.poly-btn');
+  const resetBtn = document.getElementById('reset-btn');
+
+  startBtn.addEventListener('click', () => {
+    titleScreen.hidden = true;
+    workScreen.hidden = false;
+    showHint('頂点を1つタップしてみよう', 3000);
+  });
+
+  function showHint(text, duration){
+    hint.textContent = text;
+    hint.classList.add('show');
+    if(duration){
+      clearTimeout(showHint._t);
+      showHint._t = setTimeout(() => hint.classList.remove('show'), duration);
+    }
+  }
+
+  const NOTES_KEY = 'polygon-angle-notes';
+  function safeGet(key){ try{ return localStorage.getItem(key); } catch(e){ return null; } }
+  function safeSet(key, val){ try{ localStorage.setItem(key, val); } catch(e){} }
+  let saveTimer = null;
+  notesText.value = safeGet(NOTES_KEY) || '';
+  notesText.addEventListener('input', () => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => safeSet(NOTES_KEY, notesText.value), 400);
+  });
+
+  const cx = 450, cy = 280, R = 210;
+  let n = 5;
+  let chosenIndex = null;
+  const colors = ['#7FB8DE', '#F4C177', '#B9D8A4', '#F0A6A6', '#C9B6E4'];
+
+  function vertexPos(i, count){
+    const angle = -90 + (i * 360) / count;
+    const rad = (angle * Math.PI) / 180;
+    return { x: cx + R * Math.cos(rad), y: cy + R * Math.sin(rad) };
+  }
+
+  function drawPolygon(){
+    canvas.innerHTML = '';
+    resultPanel.style.display = 'none';
+
+    const points = [];
+    for(let i = 0; i < n; i++) points.push(vertexPos(i, n));
+
+    if(chosenIndex !== null){
+      const triCount = n - 2;
+      let colorIdx = 0;
+      for(let i = 1; i < n - 1; i++){
+        const a = points[chosenIndex];
+        const b = points[(chosenIndex + i) % n];
+        const c = points[(chosenIndex + i + 1) % n];
+        const tri = document.createElementNS(svgNS, 'polygon');
+        tri.setAttribute('class', 'tri');
+        tri.setAttribute('points', `${a.x},${a.y} ${b.x},${b.y} ${c.x},${c.y}`);
+        tri.setAttribute('fill', colors[colorIdx % colors.length]);
+        canvas.appendChild(tri);
+        colorIdx++;
+      }
+    }
+
+    const outline = document.createElementNS(svgNS, 'polygon');
+    outline.setAttribute('class', 'poly-outline');
+    outline.setAttribute('points', points.map(p => `${p.x},${p.y}`).join(' '));
+    canvas.appendChild(outline);
+
+    points.forEach((p, i) => {
+      const g = document.createElementNS(svgNS, 'g');
+      g.setAttribute('class', 'vertex' + (i === chosenIndex ? ' chosen' : ''));
+      const c = document.createElementNS(svgNS, 'circle');
+      c.setAttribute('cx', p.x);
+      c.setAttribute('cy', p.y);
+      c.setAttribute('r', 18);
+      g.appendChild(c);
+      const t = document.createElementNS(svgNS, 'text');
+      t.setAttribute('x', p.x);
+      t.setAttribute('y', p.y + 1);
+      t.textContent = i + 1;
+      g.appendChild(t);
+      g.addEventListener('click', () => chooseVertex(i));
+      canvas.appendChild(g);
+    });
+
+    if(chosenIndex !== null){
+      const triCount = n - 2;
+      resultPanel.style.display = 'block';
+      resultPanel.innerHTML =
+        `三角形が <span class="big">${triCount}</span> こ できた → ` +
+        `角の合計 ＝ 180° × ${triCount} ＝ <span class="big">${180 * triCount}°</span>`;
+    }
+  }
+
+  function chooseVertex(i){
+    chosenIndex = i;
+    hint.classList.remove('show');
+    drawPolygon();
+  }
+
+  polyButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      n = Number(btn.dataset.n);
+      chosenIndex = null;
+      polyButtons.forEach((b) => b.classList.toggle('active', b === btn));
+      drawPolygon();
+      showHint('頂点を1つタップしてみよう', 2500);
+    });
+  });
+
+  resetBtn.addEventListener('click', () => {
+    chosenIndex = null;
+    drawPolygon();
+    showHint('頂点を1つタップしてみよう', 2500);
+  });
+
+  drawPolygon();
+})();
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>台形の面積を考えよう</title>
+<title>平行四辺形の面積を考えよう</title>
 <style>
   :root{
     --cream:#FBF6EC;
@@ -233,22 +233,22 @@
 <div id="app">
 
   <section id="title-screen">
-    <h1>台形の面積を<br>考えよう！</h1>
+    <h1>平行四辺形の面積を<br>考えよう！</h1>
     <svg id="title-shape" viewBox="0 0 300 160">
-      <polygon points="90,20 210,20 270,140 30,140"
+      <polygon points="70,40 230,40 260,120 100,120"
                fill="#7FB8DE" stroke="#2E5C7A" stroke-width="6" stroke-linejoin="round"/>
     </svg>
     <button id="start-btn">はじめる</button>
   </section>
 
   <section id="work-screen" hidden>
-    <header>台形の面積を考えよう</header>
+    <header>平行四辺形の面積を考えよう</header>
     <div id="canvas-wrap">
       <svg id="canvas" viewBox="0 0 900 560" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
     <div id="toolbar">
       <div class="tool-group">
-        <button class="tool-btn add-btn" data-action="addShape"><span class="icon">＋</span>台形を出す</button>
+        <button class="tool-btn add-btn" data-action="addShape"><span class="icon">＋</span>平行四辺形を出す</button>
       </div>
       <div class="tool-group">
         <button class="tool-btn" data-action="rotate"><span class="icon">↻</span>回転</button>
@@ -296,7 +296,7 @@
   }
 
   // ---------------- 気づいたことメモ ----------------
-  const NOTES_KEY = 'trapezoid-notes';
+  const NOTES_KEY = 'parallelogram-notes';
   function safeGet(key){ try{ return localStorage.getItem(key); } catch(e){ return null; } }
   function safeSet(key, val){ try{ localStorage.setItem(key, val); } catch(e){} }
   let saveTimer = null;
@@ -313,7 +313,7 @@
       {
         id: 'shape0',
         points: [
-          {x:-90, y:-60}, {x:90, y:-60}, {x:160, y:60}, {x:-160, y:60}
+          {x:-140, y:-60}, {x:60, y:-60}, {x:140, y:60}, {x:-60, y:60}
         ],
         cx: 450, cy: 280,
         angle: 0, flipx: 1, flipy: 1,
@@ -570,10 +570,10 @@
     }
   });
 
-  function addTrapezoid(){
+  function addShapeCopy(){
     const newShape = {
       id: 'shape' + (idCounter++),
-      points: [ {x:-90,y:-60}, {x:90,y:-60}, {x:160,y:60}, {x:-160,y:60} ],
+      points: [ {x:-140, y:-60}, {x:60, y:-60}, {x:140, y:60}, {x:-60, y:60} ],
       cx: 200 + Math.random() * 500,
       cy: 150 + Math.random() * 260,
       angle: 0, flipx: 1, flipy: 1,
@@ -590,7 +590,7 @@
       const action = btn.dataset.action;
 
       if(action === 'addShape'){
-        addTrapezoid();
+        addShapeCopy();
         return;
       }
       if(action === 'freeCut'){

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>円の面積を考えよう</title>
+<style>
+  :root{
+    --cream:#FBF6EC;
+    --ink:#2E3440;
+    --sky:#4F8FBF;
+    --sky-dark:#376C96;
+    --clay:#E08A4E;
+    --clay-dark:#C06A2E;
+    --leaf:#6FA96B;
+    --leaf-dark:#4F8A4B;
+    --gold:#E8B84B;
+    --gold-dark:#C79626;
+    --panel:#FFFFFF;
+    --line:#D9D2C2;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:"Hiragino Maru Gothic ProN","Yu Gothic",-apple-system,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    overflow:hidden;
+  }
+  #app{ width:100vw; height:100vh; position:relative; }
+
+  #title-screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:36px;
+    background:
+      radial-gradient(circle at 20% 20%, #FFF6E4 0%, transparent 45%),
+      radial-gradient(circle at 80% 80%, #E9F4FB 0%, transparent 45%),
+      var(--cream);
+  }
+  #title-screen h1{
+    font-size:clamp(28px, 5.5vw, 52px);
+    margin:0;
+    letter-spacing:.04em;
+    color:var(--sky-dark);
+    text-align:center;
+    text-shadow: 3px 3px 0 #fff;
+  }
+  #title-shape{ width:min(45vw,280px); }
+  #start-btn{
+    font-size:26px;
+    font-weight:700;
+    padding:18px 56px;
+    border:none;
+    border-radius:999px;
+    background:var(--clay);
+    color:#fff;
+    box-shadow:0 6px 0 var(--clay-dark);
+    cursor:pointer;
+    transition:transform .08s;
+  }
+  #start-btn:active{ transform:translateY(6px); box-shadow:0 0 0 var(--clay-dark); }
+
+  #work-screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    background:var(--cream);
+  }
+  header{
+    padding:14px 24px;
+    font-size:22px;
+    font-weight:700;
+    color:var(--sky-dark);
+    text-align:center;
+    background:var(--panel);
+    border-bottom:3px solid var(--line);
+    flex:0 0 auto;
+  }
+  #canvas-wrap{
+    flex:1 1 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:12px;
+    min-height:0;
+  }
+  #canvas{
+    width:100%;
+    height:100%;
+    max-width:900px;
+    background:#fff;
+    border:3px solid var(--line);
+    border-radius:18px;
+  }
+  .wedge{ stroke:#fff; stroke-width:2; }
+  .measure-label{ font-size:16px; font-weight:700; fill:var(--clay-dark); text-anchor:middle; }
+  .measure-line{ stroke:var(--clay-dark); stroke-width:2; stroke-dasharray:6,5; }
+
+  #toolbar{
+    flex:0 0 auto;
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    flex-wrap:wrap;
+    padding:14px 16px;
+    background:var(--panel);
+    border-top:3px solid var(--line);
+  }
+  .tool-group{
+    display:flex;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:20px;
+    background:#F7F3EA;
+    border:2px solid var(--line);
+    align-items:center;
+  }
+  .tool-group .label{ font-size:12px; font-weight:700; color:#94a3b8; padding:0 4px; }
+  .n-btn{
+    font-size:14px;
+    font-weight:700;
+    padding:9px 14px;
+    border:none;
+    border-radius:14px;
+    background:var(--leaf);
+    color:#fff;
+    box-shadow:0 4px 0 var(--leaf-dark);
+    cursor:pointer;
+    transition: all 0.15s ease-out;
+  }
+  .n-btn:active{ transform:translateY(4px); box-shadow:0 0 0 var(--leaf-dark); }
+  .n-btn.active{ background:var(--sky); box-shadow:0 4px 0 var(--sky-dark); }
+  .arrange-btn{
+    font-size:15px;
+    font-weight:700;
+    padding:10px 20px;
+    border:none;
+    border-radius:14px;
+    background:var(--clay);
+    color:#fff;
+    box-shadow:0 4px 0 var(--clay-dark);
+    cursor:pointer;
+    transition: all 0.15s ease-out;
+  }
+  .arrange-btn:active{ transform:translateY(4px); box-shadow:0 0 0 var(--clay-dark); }
+
+  #notes-section{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:10px 22px;
+    background:var(--panel);
+    border-top:3px solid var(--line);
+  }
+  #notes-label{ font-size:16px; font-weight:700; color:var(--sky-dark); white-space:nowrap; }
+  #notes-text{
+    flex:1 1 auto;
+    min-height:44px;
+    max-height:100px;
+    resize:vertical;
+    font-size:17px; line-height:1.6;
+    padding:10px 14px; border-radius:12px; border:2px solid var(--line);
+    font-family:inherit;
+    background:#FFFDF8;
+  }
+  #notes-text:focus{ outline:3px solid var(--gold); border-color:var(--gold-dark); }
+
+  button:focus-visible, [tabindex]:focus-visible, textarea:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section id="title-screen">
+    <h1>円の面積を<br>考えよう！</h1>
+    <svg id="title-shape" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="80" fill="#7FB8DE" stroke="#2E5C7A" stroke-width="6"/>
+      <line x1="100" y1="100" x2="100" y2="20" stroke="#fff" stroke-width="3"/>
+      <line x1="100" y1="100" x2="165" y2="140" stroke="#fff" stroke-width="3"/>
+      <line x1="100" y1="100" x2="35" y2="140" stroke="#fff" stroke-width="3"/>
+    </svg>
+    <button id="start-btn">はじめる</button>
+  </section>
+
+  <section id="work-screen" hidden>
+    <header>円の面積を考えよう</header>
+    <div id="canvas-wrap">
+      <svg id="canvas" viewBox="0 0 900 560"></svg>
+    </div>
+    <div id="toolbar">
+      <div class="tool-group">
+        <span class="label">分ける数</span>
+        <button class="n-btn" data-n="8">8等分</button>
+        <button class="n-btn active" data-n="16">16等分</button>
+        <button class="n-btn" data-n="32">32等分</button>
+      </div>
+      <button class="arrange-btn" id="arrange-btn">▬ 組み替える</button>
+    </div>
+    <div id="notes-section">
+      <span id="notes-label">気づいたこと</span>
+      <textarea id="notes-text" placeholder="気づいたことを書いてみよう"></textarea>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const titleScreen = document.getElementById('title-screen');
+  const workScreen = document.getElementById('work-screen');
+  const startBtn = document.getElementById('start-btn');
+  const canvas = document.getElementById('canvas');
+  const notesText = document.getElementById('notes-text');
+  const nButtons = document.querySelectorAll('.n-btn');
+  const arrangeBtn = document.getElementById('arrange-btn');
+
+  startBtn.addEventListener('click', () => {
+    titleScreen.hidden = true;
+    workScreen.hidden = false;
+  });
+
+  const NOTES_KEY = 'circle-area-notes';
+  function safeGet(key){ try{ return localStorage.getItem(key); } catch(e){ return null; } }
+  function safeSet(key, val){ try{ localStorage.setItem(key, val); } catch(e){} }
+  let saveTimer = null;
+  notesText.value = safeGet(NOTES_KEY) || '';
+  notesText.addEventListener('input', () => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => safeSet(NOTES_KEY, notesText.value), 400);
+  });
+
+  const cx = 450, cy = 300, R = 200;
+  let n = 16;
+  let arranged = false;
+  const colorA = '#7FB8DE';
+  const colorB = '#F4C177';
+
+  function drawCircleMode(){
+    canvas.innerHTML = '';
+    const delta = (2 * Math.PI) / n;
+    for(let i = 0; i < n; i++){
+      const a1 = -Math.PI/2 + i * delta;
+      const a2 = a1 + delta;
+      const x1 = cx + R * Math.cos(a1), y1 = cy + R * Math.sin(a1);
+      const x2 = cx + R * Math.cos(a2), y2 = cy + R * Math.sin(a2);
+      const largeArc = delta > Math.PI ? 1 : 0;
+      const path = document.createElementNS(svgNS, 'path');
+      const d = `M ${cx} ${cy} L ${x1} ${y1} A ${R} ${R} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+      path.setAttribute('d', d);
+      path.setAttribute('class', 'wedge');
+      path.setAttribute('fill', i % 2 === 0 ? colorA : colorB);
+      canvas.appendChild(path);
+    }
+  }
+
+  function drawArrangedMode(){
+    canvas.innerHTML = '';
+    const half = Math.PI / n;              // 1つのおうぎ形の半分の中心角
+    const halfChord = R * Math.sin(half);   // 底辺の半分の長さ
+    const H = R * Math.cos(half);           // 頂点から底辺までの高さ（≒半径）
+
+    const totalWidth = (n - 1) * halfChord + 2 * halfChord;
+    const startX = cx - totalWidth / 2 + halfChord;
+    const baseY = cy + H / 2;               // 帯の下側の基準線
+
+    for(let i = 0; i < n; i++){
+      const xi = startX + i * halfChord;
+      let points;
+      if(i % 2 === 0){
+        // 頂点が下向き
+        points = `${xi},${baseY} ${xi - halfChord},${baseY - H} ${xi + halfChord},${baseY - H}`;
+      } else {
+        // 頂点が上向き
+        points = `${xi},${baseY - H} ${xi - halfChord},${baseY} ${xi + halfChord},${baseY}`;
+      }
+      const tri = document.createElementNS(svgNS, 'polygon');
+      tri.setAttribute('points', points);
+      tri.setAttribute('class', 'wedge');
+      tri.setAttribute('fill', i % 2 === 0 ? colorA : colorB);
+      canvas.appendChild(tri);
+    }
+
+    // はば（円周の半分）の矢印と高さ（半径）の目盛り
+    const leftX = startX - halfChord;
+    const rightX = startX + (n - 1) * halfChord + halfChord;
+    const topY = baseY - H - 26;
+
+    const widthLine = document.createElementNS(svgNS, 'line');
+    widthLine.setAttribute('class', 'measure-line');
+    widthLine.setAttribute('x1', leftX);
+    widthLine.setAttribute('y1', topY);
+    widthLine.setAttribute('x2', rightX);
+    widthLine.setAttribute('y2', topY);
+    canvas.appendChild(widthLine);
+
+    const widthLabel = document.createElementNS(svgNS, 'text');
+    widthLabel.setAttribute('class', 'measure-label');
+    widthLabel.setAttribute('x', (leftX + rightX) / 2);
+    widthLabel.setAttribute('y', topY - 10);
+    widthLabel.textContent = 'はば ≒ 円周の半分';
+    canvas.appendChild(widthLabel);
+
+    const heightLine = document.createElementNS(svgNS, 'line');
+    heightLine.setAttribute('class', 'measure-line');
+    heightLine.setAttribute('x1', rightX + 26);
+    heightLine.setAttribute('y1', baseY);
+    heightLine.setAttribute('x2', rightX + 26);
+    heightLine.setAttribute('y2', baseY - H);
+    canvas.appendChild(heightLine);
+
+    const heightLabel = document.createElementNS(svgNS, 'text');
+    heightLabel.setAttribute('class', 'measure-label');
+    heightLabel.setAttribute('x', rightX + 70);
+    heightLabel.setAttribute('y', baseY - H / 2 + 5);
+    heightLabel.textContent = 'たかさ ≒ 半径';
+    canvas.appendChild(heightLabel);
+  }
+
+  function render(){
+    if(arranged) drawArrangedMode();
+    else drawCircleMode();
+    arrangeBtn.textContent = arranged ? '🥧 円にもどす' : '▬ 組み替える';
+  }
+
+  nButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      n = Number(btn.dataset.n);
+      nButtons.forEach((b) => b.classList.toggle('active', b === btn));
+      render();
+    });
+  });
+
+  arrangeBtn.addEventListener('click', () => {
+    arranged = !arranged;
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

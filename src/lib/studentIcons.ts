@@ -34,6 +34,10 @@ export const STUDENT_ICONS: Record<string, string> = {
   "circuit-basics-g3": "💡",
   "weather-temperature-g4": "🌤️",
   "trapezoid-area-g5": "🔷",
+  "parallelogram-area-g5": "▱",
+  "triangle-area-g5": "🔺",
+  "polygon-angle-sum-g5": "🔶",
+  "circle-area-g6": "⭕",
 };
 
 export const DEFAULT_STUDENT_ICON = "⭐";
