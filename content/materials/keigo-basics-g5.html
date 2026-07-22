@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>敬語の使い方</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 28px 24px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; text-align: center; }
+  .progress { font-size: 13px; color: #64748b; text-align: right; margin-bottom: 8px; }
+  .question {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 8px 0 18px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .choices { display: grid; gap: 10px; }
+  .choice {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    text-align: left;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  .choice:hover { border-color: #93c5fd; }
+  .choice.correct { border-color: #16a34a; background: #dcfce7; }
+  .choice.wrong { border-color: #dc2626; background: #fee2e2; }
+  .choice:disabled { cursor: default; }
+  button.primary {
+    width: 100%;
+    margin-top: 18px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  button.primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+  .result { font-size: 16px; line-height: 1.7; text-align: center; }
+  .result .score { font-size: 32px; font-weight: 700; color: #2563eb; }
+  .review { margin-top: 16px; font-size: 13px; color: #475569; text-align: left; }
+  .review li { margin-bottom: 4px; }
+  .note {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    font-size: 12px;
+    color: #1e3a8a;
+    line-height: 1.7;
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>敬語の使い方</h1>
+    <div class="sub">尊敬語・謙譲語を4択で答えよう（全8問）</div>
+
+    <div id="quiz">
+      <div class="progress" id="progress"></div>
+      <div class="question" id="question"></div>
+      <div class="choices" id="choices"></div>
+      <button class="primary" id="nextBtn" disabled>次へ</button>
+    </div>
+
+    <div id="result" class="result" style="display:none;"></div>
+  </div>
+
+<script>
+  const bank = [
+    { q: "先生が「言う」ことを敬語で言うと？", choices: ["先生がおっしゃる", "先生が申す", "先生が言います", "先生が申し上げる"], answer: 0 },
+    { q: "自分が先生に「聞く」ことを敬語で言うと？", choices: ["先生にうかがう", "先生がお聞きになる", "先生に聞きます", "先生がお聞きする"], answer: 0 },
+    { q: "お客様が「食べる」ことを敬語で言うと？", choices: ["召し上がる", "いただく", "食べます", "頂戴する"], answer: 0 },
+    { q: "自分が先生から「もらう」ことを敬語で言うと？", choices: ["いただく", "くださる", "もらいます", "召し上がる"], answer: 0 },
+    { q: "お客様が「来る」ことを敬語で言うと？", choices: ["いらっしゃる", "まいる", "来ます", "うかがう"], answer: 0 },
+    { q: "自分が先生の家に「行く」ことを敬語で言うと？", choices: ["うかがう", "いらっしゃる", "行きます", "おいでになる"], answer: 0 },
+    { q: "校長先生が「見る」ことを敬語で言うと？", choices: ["ご覧になる", "拝見する", "見ます", "見てもらう"], answer: 0 },
+    { q: "自分が先生の作品を「見る」ことを敬語で言うと？", choices: ["拝見する", "ご覧になる", "見ます", "見せる"], answer: 0 },
+  ];
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function buildQuestion(item) {
+    const correctText = item.choices[item.answer];
+    const shuffledChoices = shuffle(item.choices);
+    return {
+      q: item.q,
+      choices: shuffledChoices,
+      answer: shuffledChoices.indexOf(correctText),
+    };
+  }
+
+  const questions = shuffle(bank).map(buildQuestion);
+
+  let index = 0;
+  let score = 0;
+  const history = [];
+
+  const progressEl = document.getElementById("progress");
+  const questionEl = document.getElementById("question");
+  const choicesEl = document.getElementById("choices");
+  const nextBtn = document.getElementById("nextBtn");
+  const quizEl = document.getElementById("quiz");
+  const resultEl = document.getElementById("result");
+
+  function renderQuestion() {
+    const item = questions[index];
+    progressEl.textContent = `${index + 1} / ${questions.length} 問`;
+    questionEl.textContent = item.q;
+    choicesEl.innerHTML = "";
+    nextBtn.disabled = true;
+
+    item.choices.forEach((choice, i) => {
+      const btn = document.createElement("button");
+      btn.className = "choice";
+      btn.textContent = choice;
+      btn.addEventListener("click", () => selectChoice(i));
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function selectChoice(selected) {
+    const item = questions[index];
+    const buttons = choicesEl.querySelectorAll(".choice");
+    buttons.forEach((btn, i) => {
+      btn.disabled = true;
+      if (i === item.answer) btn.classList.add("correct");
+      if (i === selected && selected !== item.answer) btn.classList.add("wrong");
+    });
+
+    const isCorrect = selected === item.answer;
+    if (isCorrect) score += 1;
+    history.push({ q: item.q, correct: isCorrect, correctText: item.choices[item.answer] });
+    nextBtn.disabled = false;
+  }
+
+  function showResult() {
+    quizEl.style.display = "none";
+    resultEl.style.display = "block";
+    const reviewItems = history
+      .map((h) => `<li>${h.correct ? "◯" : "✕"} ${h.q}（正解: ${h.correctText}）</li>`)
+      .join("");
+    resultEl.innerHTML = `
+      <div>結果</div>
+      <div class="score">${score} / ${questions.length}</div>
+      <ul class="review">${reviewItems}</ul>
+      <div class="note">尊敬語：相手の動作を高めて言う言い方（例：おっしゃる／いらっしゃる）<br>謙譲語：自分の動作をへりくだって言う言い方（例：うかがう／いただく）</div>
+      <button class="primary" id="retryBtn">もう一度挑戦する</button>
+    `;
+    document.getElementById("retryBtn").addEventListener("click", restart);
+  }
+
+  function restart() {
+    location.reload();
+  }
+
+  nextBtn.addEventListener("click", () => {
+    index += 1;
+    if (index >= questions.length) {
+      showResult();
+    } else {
+      renderQuestion();
+    }
+  });
+
+  renderQuestion();
+</script>
+</body>
+</html>

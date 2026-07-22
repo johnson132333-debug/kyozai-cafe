@@ -2,6 +2,7 @@
 // 児童生徒用・先生用の両方の学年選択UIで共有します。
 
 export const GRADE_STYLES: Record<string, string> = {
+  小学1年: "bg-lime-100 dark:bg-lime-950 text-lime-900 dark:text-lime-100 border-lime-300 dark:border-lime-800",
   小学2年: "bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-100 border-amber-300 dark:border-amber-800",
   小学3年: "bg-orange-100 dark:bg-orange-950 text-orange-900 dark:text-orange-100 border-orange-300 dark:border-orange-800",
   小学4年: "bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 border-emerald-300 dark:border-emerald-800",
@@ -15,6 +16,7 @@ export const DEFAULT_GRADE_STYLE =
   "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700";
 
 export const GRADE_ICONS: Record<string, string> = {
+  小学1年: "1️⃣",
   小学2年: "2️⃣",
   小学3年: "3️⃣",
   小学4年: "4️⃣",
@@ -25,6 +27,7 @@ export const GRADE_ICONS: Record<string, string> = {
 };
 
 export const GRADE_LABELS: Record<string, string> = {
+  小学1年: "1年生",
   小学2年: "2年生",
   小学3年: "3年生",
   小学4年: "4年生",

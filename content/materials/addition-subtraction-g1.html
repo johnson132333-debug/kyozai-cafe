@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>たしざん・ひきざんドリル</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 28px 24px;
+    text-align: center;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+  .stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    font-size: 14px;
+    color: #475569;
+  }
+  .stats span strong { color: #1f2937; font-size: 16px; }
+  .question {
+    font-size: 42px;
+    font-weight: 700;
+    margin: 12px 0 20px;
+    color: #1d4ed8;
+  }
+  input[type="number"] {
+    width: 100%;
+    font-size: 24px;
+    text-align: center;
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid #cbd5e1;
+    margin-bottom: 14px;
+  }
+  input[type="number"]:focus { outline: none; border-color: #2563eb; }
+  button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  button:active { transform: scale(0.98); }
+  button.secondary {
+    background: #e2e8f0;
+    color: #334155;
+    margin-top: 10px;
+  }
+  .feedback {
+    min-height: 22px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .feedback.correct { color: #16a34a; }
+  .feedback.wrong { color: #dc2626; }
+  .result { font-size: 15px; color: #334155; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>たしざん・ひきざんドリル</h1>
+    <div class="sub">60秒で何問解けるかチャレンジ！（こたえは10までだよ）</div>
+
+    <div id="setup">
+      <button id="startBtn">スタート</button>
+    </div>
+
+    <div id="game" style="display:none;">
+      <div class="stats">
+        <span>のこり時間: <strong id="time">60</strong>秒</span>
+        <span>せいかい数: <strong id="score">0</strong></span>
+      </div>
+      <div class="question" id="question">?</div>
+      <div class="feedback" id="feedback"></div>
+      <form id="answerForm">
+        <input type="number" id="answer" inputmode="numeric" autocomplete="off" placeholder="こたえを入力" />
+        <button type="submit">こたえる</button>
+      </form>
+    </div>
+
+    <div id="finished" style="display:none;">
+      <div class="result" id="resultText"></div>
+      <button class="secondary" id="retryBtn">もう一度挑戦する</button>
+    </div>
+  </div>
+
+<script>
+  const startBtn = document.getElementById("startBtn");
+  const retryBtn = document.getElementById("retryBtn");
+  const setupEl = document.getElementById("setup");
+  const gameEl = document.getElementById("game");
+  const finishedEl = document.getElementById("finished");
+  const timeEl = document.getElementById("time");
+  const scoreEl = document.getElementById("score");
+  const questionEl = document.getElementById("question");
+  const feedbackEl = document.getElementById("feedback");
+  const form = document.getElementById("answerForm");
+  const answerInput = document.getElementById("answer");
+  const resultText = document.getElementById("resultText");
+
+  let score = 0;
+  let attempts = 0;
+  let timeLeft = 60;
+  let timerId = null;
+  let current = { a: 1, b: 1, op: "+" };
+
+  function nextQuestion() {
+    const op = Math.random() < 0.5 ? "+" : "-";
+    let a, b;
+    if (op === "+") {
+      // a + b <= 10, no carrying past 10
+      a = Math.floor(Math.random() * 9) + 1;
+      const maxB = 10 - a;
+      b = Math.floor(Math.random() * maxB) + 1;
+    } else {
+      // a - b >= 0, a <= 10
+      a = Math.floor(Math.random() * 10) + 1;
+      b = Math.floor(Math.random() * a);
+    }
+    current = { a, b, op };
+    questionEl.textContent = `${a} ${op === "+" ? "＋" : "－"} ${b}`;
+    answerInput.value = "";
+    answerInput.focus();
+  }
+
+  function currentAnswer() {
+    return current.op === "+" ? current.a + current.b : current.a - current.b;
+  }
+
+  function startGame() {
+    score = 0;
+    attempts = 0;
+    timeLeft = 60;
+    scoreEl.textContent = score;
+    timeEl.textContent = timeLeft;
+    feedbackEl.textContent = "";
+    setupEl.style.display = "none";
+    finishedEl.style.display = "none";
+    gameEl.style.display = "block";
+    nextQuestion();
+
+    timerId = setInterval(() => {
+      timeLeft -= 1;
+      timeEl.textContent = timeLeft;
+      if (timeLeft <= 0) {
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function endGame() {
+    clearInterval(timerId);
+    gameEl.style.display = "none";
+    finishedEl.style.display = "block";
+    const accuracy = attempts > 0 ? Math.round((score / attempts) * 100) : 0;
+    resultText.innerHTML = `せいかい数: <strong>${score}</strong> 問<br>こたえた数: ${attempts} 問（せいかい率 ${accuracy}%）`;
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (timeLeft <= 0) return;
+    const value = Number(answerInput.value);
+    attempts += 1;
+    if (value === currentAnswer()) {
+      score += 1;
+      scoreEl.textContent = score;
+      feedbackEl.textContent = "せいかい！";
+      feedbackEl.className = "feedback correct";
+    } else {
+      feedbackEl.textContent = `ざんねん（こたえは ${currentAnswer()}）`;
+      feedbackEl.className = "feedback wrong";
+    }
+    nextQuestion();
+  });
+
+  startBtn.addEventListener("click", startGame);
+  retryBtn.addEventListener("click", startGame);
+</script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ローマ字れんしゅう</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 28px 24px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; text-align: center; }
+  .progress { font-size: 13px; color: #64748b; text-align: right; margin-bottom: 8px; }
+  .target {
+    font-size: 34px;
+    font-weight: 700;
+    margin: 8px 0 4px;
+    text-align: center;
+    color: #1d4ed8;
+  }
+  .question {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 18px;
+    text-align: center;
+    color: #475569;
+  }
+  .choices { display: grid; gap: 10px; }
+  .choice {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    text-align: left;
+    font-size: 18px;
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  .choice:hover { border-color: #93c5fd; }
+  .choice.correct { border-color: #16a34a; background: #dcfce7; }
+  .choice.wrong { border-color: #dc2626; background: #fee2e2; }
+  .choice:disabled { cursor: default; }
+  button.primary {
+    width: 100%;
+    margin-top: 18px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  button.primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+  .result { font-size: 16px; line-height: 1.7; text-align: center; }
+  .result .score { font-size: 32px; font-weight: 700; color: #2563eb; }
+  .review { margin-top: 16px; font-size: 13px; color: #475569; text-align: left; }
+  .review li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>ローマ字れんしゅう</h1>
+    <div class="sub">訓令式のローマ字で正しいつづりを4択で選ぼう（全5問）</div>
+
+    <div id="quiz">
+      <div class="progress" id="progress"></div>
+      <div class="target" id="target"></div>
+      <div class="question" id="question">を ローマ字で 書くと？</div>
+      <div class="choices" id="choices"></div>
+      <button class="primary" id="nextBtn" disabled>次へ</button>
+    </div>
+
+    <div id="result" class="result" style="display:none;"></div>
+  </div>
+
+<script>
+  const bank = [
+    { q: "さくら", choices: ["sakura", "sakuda", "sakuna", "shakura"], answer: "sakura" },
+    { q: "とけい", choices: ["tokei", "toke", "tokee", "tokai"], answer: "tokei" },
+    { q: "がっこう", choices: ["gakkou", "gakou", "gakkoo", "gakko"], answer: "gakkou" },
+    { q: "でんしゃ", choices: ["densya", "densiya", "detsuya", "densuya"], answer: "densya" },
+    { q: "ちきゅう", choices: ["tikyuu", "tikyou", "tikuyu", "tikuu"], answer: "tikyuu" },
+    { q: "ふうせん", choices: ["huusen", "husen", "huisen", "hyuusen"], answer: "huusen" },
+    { q: "じてんしゃ", choices: ["zitensya", "zitenshu", "zitenya", "zutensya"], answer: "zitensya" },
+    { q: "きって", choices: ["kitte", "kite", "kitde", "kiite"], answer: "kitte" },
+  ];
+
+  const QUESTION_COUNT = 5;
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  let questions = [];
+  let index = 0;
+  let score = 0;
+  const history = [];
+
+  const progressEl = document.getElementById("progress");
+  const targetEl = document.getElementById("target");
+  const choicesEl = document.getElementById("choices");
+  const nextBtn = document.getElementById("nextBtn");
+  const quizEl = document.getElementById("quiz");
+  const resultEl = document.getElementById("result");
+
+  function buildQuestions() {
+    questions = shuffle(bank).slice(0, QUESTION_COUNT).map((item) => ({
+      q: item.q,
+      answer: item.answer,
+      displayChoices: shuffle(item.choices),
+    }));
+  }
+
+  function renderQuestion() {
+    const item = questions[index];
+    progressEl.textContent = `${index + 1} / ${questions.length} 問`;
+    targetEl.textContent = `「${item.q}」`;
+    choicesEl.innerHTML = "";
+    nextBtn.disabled = true;
+
+    item.displayChoices.forEach((choice) => {
+      const btn = document.createElement("button");
+      btn.className = "choice";
+      btn.textContent = choice;
+      btn.addEventListener("click", () => selectChoice(choice));
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function selectChoice(selected) {
+    const item = questions[index];
+    const buttons = choicesEl.querySelectorAll(".choice");
+    buttons.forEach((btn) => {
+      btn.disabled = true;
+      if (btn.textContent === item.answer) btn.classList.add("correct");
+      if (btn.textContent === selected && selected !== item.answer) btn.classList.add("wrong");
+    });
+
+    const isCorrect = selected === item.answer;
+    if (isCorrect) score += 1;
+    history.push({ q: `「${item.q}」`, correct: isCorrect, correctText: item.answer });
+    nextBtn.disabled = false;
+  }
+
+  function showResult() {
+    quizEl.style.display = "none";
+    resultEl.style.display = "block";
+    const reviewItems = history
+      .map((h) => `<li>${h.correct ? "◯" : "✕"} ${h.q}（正解: ${h.correctText}）</li>`)
+      .join("");
+    resultEl.innerHTML = `
+      <div>結果</div>
+      <div class="score">${score} / ${questions.length}</div>
+      <ul class="review">${reviewItems}</ul>
+      <button class="primary" id="retryBtn">もう一度挑戦する</button>
+    `;
+    document.getElementById("retryBtn").addEventListener("click", restart);
+  }
+
+  function restart() {
+    index = 0;
+    score = 0;
+    history.length = 0;
+    buildQuestions();
+    quizEl.style.display = "block";
+    resultEl.style.display = "none";
+    renderQuestion();
+  }
+
+  nextBtn.addEventListener("click", () => {
+    index += 1;
+    if (index >= questions.length) {
+      showResult();
+    } else {
+      renderQuestion();
+    }
+  });
+
+  buildQuestions();
+  renderQuestion();
+</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>10までのかずをつくろう</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 26px 24px;
+    text-align: center;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; line-height: 1.6; }
+
+  .n-buttons { display: flex; gap: 6px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .n-buttons button {
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 999px;
+    border: 2px solid #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  .n-buttons button.active { border-color: #2563eb; background: #2563eb; color: #fff; }
+
+  .dots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin: 8px 0 22px;
+    min-height: 62px;
+  }
+  .dot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: #93c5fd;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+    box-shadow: 0 3px 0 rgba(15, 23, 42, 0.15);
+  }
+  .dot:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(15, 23, 42, 0.15); }
+  .dot.groupB { background: #fdba74; }
+
+  .equation {
+    font-size: 30px;
+    font-weight: 700;
+    color: #1d4ed8;
+    margin-bottom: 4px;
+  }
+  .equation .b { color: #c2410c; }
+  .caption { font-size: 13px; color: #64748b; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>10までのかずをつくろう</h1>
+    <div class="sub">○を タップして 2つの グループに わけてみよう</div>
+
+    <div class="n-buttons" id="nButtons"></div>
+    <div class="dots" id="dots"></div>
+
+    <div class="equation" id="equation"></div>
+    <div class="caption">タップするたびに いろが かわるよ</div>
+  </div>
+
+<script>
+  const nButtonsEl = document.getElementById("nButtons");
+  const dotsEl = document.getElementById("dots");
+  const equationEl = document.getElementById("equation");
+
+  let n = 7;
+  let groupB = new Set();
+
+  function renderButtons() {
+    nButtonsEl.innerHTML = "";
+    for (let i = 5; i <= 10; i++) {
+      const btn = document.createElement("button");
+      btn.textContent = i;
+      btn.className = i === n ? "active" : "";
+      btn.addEventListener("click", () => {
+        n = i;
+        groupB = new Set();
+        renderButtons();
+        renderDots();
+      });
+      nButtonsEl.appendChild(btn);
+    }
+  }
+
+  function renderDots() {
+    dotsEl.innerHTML = "";
+    for (let i = 0; i < n; i++) {
+      const dot = document.createElement("button");
+      dot.className = "dot" + (groupB.has(i) ? " groupB" : "");
+      dot.setAttribute("aria-label", `${i + 1}こめ`);
+      dot.addEventListener("click", () => {
+        if (groupB.has(i)) groupB.delete(i);
+        else groupB.add(i);
+        renderDots();
+      });
+      dotsEl.appendChild(dot);
+    }
+    updateEquation();
+  }
+
+  function updateEquation() {
+    const countB = groupB.size;
+    const countA = n - countB;
+    equationEl.innerHTML = `${countA} と <span class="b">${countB}</span> で ${n}`;
+  }
+
+  renderButtons();
+  renderDots();
+</script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>とけいをよもう</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 28px 24px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 16px; text-align: center; }
+  .progress { font-size: 13px; color: #64748b; text-align: right; margin-bottom: 8px; }
+
+  svg#clock { width: 180px; height: 180px; display: block; margin: 0 auto 18px; }
+  .tick { stroke: #94a3b8; stroke-width: 2; }
+  .hand-hour { stroke: #1f2937; stroke-width: 5; stroke-linecap: round; }
+  .hand-minute { stroke: #2563eb; stroke-width: 3.5; stroke-linecap: round; }
+  .clock-face { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 3; }
+  .clock-pin { fill: #1f2937; }
+
+  .question {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 4px 0 16px;
+    text-align: center;
+  }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choice {
+    padding: 14px 10px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  .choice:hover { border-color: #93c5fd; }
+  .choice.correct { border-color: #16a34a; background: #dcfce7; }
+  .choice.wrong { border-color: #dc2626; background: #fee2e2; }
+  .choice:disabled { cursor: default; }
+  button.primary {
+    width: 100%;
+    margin-top: 18px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  button.primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+  .result { font-size: 16px; line-height: 1.7; text-align: center; }
+  .result .score { font-size: 32px; font-weight: 700; color: #2563eb; }
+  .review { margin-top: 16px; font-size: 13px; color: #475569; text-align: left; }
+  .review li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>とけいをよもう</h1>
+    <div class="sub">とけいが さしている じこくを えらぼう（全5問）</div>
+
+    <div id="quiz">
+      <div class="progress" id="progress"></div>
+      <svg id="clock" viewBox="0 0 200 200"></svg>
+      <div class="question" id="question">いま なんじ？</div>
+      <div class="choices" id="choices"></div>
+      <button class="primary" id="nextBtn" disabled>つぎへ</button>
+    </div>
+
+    <div id="result" class="result" style="display:none;"></div>
+  </div>
+
+<script>
+  const NS = "http://www.w3.org/2000/svg";
+  const clockEl = document.getElementById("clock");
+  const progressEl = document.getElementById("progress");
+  const choicesEl = document.getElementById("choices");
+  const nextBtn = document.getElementById("nextBtn");
+  const quizEl = document.getElementById("quiz");
+  const resultEl = document.getElementById("result");
+
+  // 学習指導要領・第1学年の範囲：「〇じ」と「〇じはん」だけを扱う
+  const QUESTION_BANK = [
+    { hour: 1, half: false },
+    { hour: 3, half: true },
+    { hour: 5, half: false },
+    { hour: 7, half: true },
+    { hour: 9, half: false },
+    { hour: 11, half: true },
+    { hour: 2, half: false },
+    { hour: 4, half: true },
+    { hour: 6, half: false },
+    { hour: 8, half: true },
+    { hour: 10, half: false },
+    { hour: 12, half: true },
+  ];
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function timeLabel(hour, half) {
+    return half ? `${hour}じはん` : `${hour}じ`;
+  }
+
+  function sameTime(a, b) {
+    return a.hour === b.hour && a.half === b.half;
+  }
+
+  function wrapHour(h) {
+    if (h < 1) return h + 12;
+    if (h > 12) return h - 12;
+    return h;
+  }
+
+  function buildChoices(correct) {
+    const candidates = [];
+    [-1, 0, 1].forEach((dh) => {
+      [false, true].forEach((half) => {
+        const cand = { hour: wrapHour(correct.hour + dh), half };
+        if (!sameTime(cand, correct) && !candidates.some((c) => sameTime(c, cand))) {
+          candidates.push(cand);
+        }
+      });
+    });
+    const wrongs = shuffle(candidates).slice(0, 3);
+    return shuffle([correct, ...wrongs]);
+  }
+
+  function polarToCartesian(cx, cy, r, angleDeg) {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  function drawClock(hour, half) {
+    clockEl.innerHTML = "";
+    const cx = 100, cy = 100, r = 88;
+
+    const face = document.createElementNS(NS, "circle");
+    face.setAttribute("cx", cx);
+    face.setAttribute("cy", cy);
+    face.setAttribute("r", r);
+    face.setAttribute("class", "clock-face");
+    clockEl.appendChild(face);
+
+    for (let i = 0; i < 12; i++) {
+      const angle = i * 30;
+      const outer = polarToCartesian(cx, cy, r - 6, angle);
+      const inner = polarToCartesian(cx, cy, r - 16, angle);
+      const tick = document.createElementNS(NS, "line");
+      tick.setAttribute("x1", outer.x);
+      tick.setAttribute("y1", outer.y);
+      tick.setAttribute("x2", inner.x);
+      tick.setAttribute("y2", inner.y);
+      tick.setAttribute("class", "tick");
+      clockEl.appendChild(tick);
+    }
+
+    const hourAngle = (hour % 12) * 30 + (half ? 15 : 0);
+    const minuteAngle = half ? 180 : 0;
+
+    const hourTip = polarToCartesian(cx, cy, r * 0.5, hourAngle);
+    const hourHand = document.createElementNS(NS, "line");
+    hourHand.setAttribute("x1", cx);
+    hourHand.setAttribute("y1", cy);
+    hourHand.setAttribute("x2", hourTip.x);
+    hourHand.setAttribute("y2", hourTip.y);
+    hourHand.setAttribute("class", "hand-hour");
+    clockEl.appendChild(hourHand);
+
+    const minuteTip = polarToCartesian(cx, cy, r * 0.78, minuteAngle);
+    const minuteHand = document.createElementNS(NS, "line");
+    minuteHand.setAttribute("x1", cx);
+    minuteHand.setAttribute("y1", cy);
+    minuteHand.setAttribute("x2", minuteTip.x);
+    minuteHand.setAttribute("y2", minuteTip.y);
+    minuteHand.setAttribute("class", "hand-minute");
+    clockEl.appendChild(minuteHand);
+
+    const pin = document.createElementNS(NS, "circle");
+    pin.setAttribute("cx", cx);
+    pin.setAttribute("cy", cy);
+    pin.setAttribute("r", 5);
+    pin.setAttribute("class", "clock-pin");
+    clockEl.appendChild(pin);
+  }
+
+  let questions = [];
+  let index = 0;
+  let score = 0;
+  const history = [];
+
+  function renderQuestion() {
+    const item = questions[index];
+    progressEl.textContent = `${index + 1} / ${questions.length} 問`;
+    drawClock(item.hour, item.half);
+    choicesEl.innerHTML = "";
+    nextBtn.disabled = true;
+
+    const choiceSet = buildChoices(item);
+    choiceSet.forEach((c) => {
+      const btn = document.createElement("button");
+      btn.className = "choice";
+      btn.textContent = timeLabel(c.hour, c.half);
+      btn.addEventListener("click", () => selectChoice(c));
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function selectChoice(selected) {
+    const item = questions[index];
+    const buttons = choicesEl.querySelectorAll(".choice");
+    buttons.forEach((btn) => {
+      btn.disabled = true;
+      if (btn.textContent === timeLabel(item.hour, item.half)) btn.classList.add("correct");
+      else if (btn.textContent === timeLabel(selected.hour, selected.half) && !sameTime(selected, item)) {
+        btn.classList.add("wrong");
+      }
+    });
+
+    const isCorrect = sameTime(selected, item);
+    if (isCorrect) score += 1;
+    history.push({ q: timeLabel(item.hour, item.half), correct: isCorrect });
+    nextBtn.disabled = false;
+  }
+
+  function showResult() {
+    quizEl.style.display = "none";
+    resultEl.style.display = "block";
+    const reviewItems = history
+      .map((h) => `<li>${h.correct ? "◯" : "✕"} こたえ: ${h.q}</li>`)
+      .join("");
+    resultEl.innerHTML = `
+      <div>けっか</div>
+      <div class="score">${score} / ${questions.length}</div>
+      <ul class="review">${reviewItems}</ul>
+      <button class="primary" id="retryBtn">もう一度挑戦する</button>
+    `;
+    document.getElementById("retryBtn").addEventListener("click", restart);
+  }
+
+  function restart() {
+    questions = shuffle(QUESTION_BANK).slice(0, 5);
+    index = 0;
+    score = 0;
+    history.length = 0;
+    quizEl.style.display = "block";
+    resultEl.style.display = "none";
+    renderQuestion();
+  }
+
+  nextBtn.addEventListener("click", () => {
+    index += 1;
+    if (index >= questions.length) {
+      showResult();
+    } else {
+      renderQuestion();
+    }
+  });
+
+  restart();
+</script>
+</body>
+</html>

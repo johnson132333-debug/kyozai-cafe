@@ -38,6 +38,15 @@ export const STUDENT_ICONS: Record<string, string> = {
   "triangle-area-g5": "🔺",
   "polygon-angle-sum-g5": "🔶",
   "circle-area-g6": "⭕",
+  "number-composition-g1": "🔟",
+  "addition-subtraction-g1": "➕",
+  "clock-reading-g1": "🕒",
+  "hiragana-practice-g1": "🈁",
+  "morning-glory-growth-g1": "🌸",
+  "romaji-practice-g3": "🔠",
+  "subject-predicate-g2": "📝",
+  "idiom-proverb-quiz-g4": "💬",
+  "keigo-basics-g5": "🙇",
 };
 
 export const DEFAULT_STUDENT_ICON = "⭐";

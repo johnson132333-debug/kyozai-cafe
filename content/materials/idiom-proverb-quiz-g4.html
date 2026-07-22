@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>慣用句・ことわざクイズ</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 28px 24px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; text-align: center; }
+  .progress { font-size: 13px; color: #64748b; text-align: right; margin-bottom: 8px; }
+  .question {
+    font-size: 19px;
+    font-weight: 700;
+    margin: 8px 0 18px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .choices { display: grid; gap: 10px; }
+  .choice {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    text-align: left;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  .choice:hover { border-color: #93c5fd; }
+  .choice.correct { border-color: #16a34a; background: #dcfce7; }
+  .choice.wrong { border-color: #dc2626; background: #fee2e2; }
+  .choice:disabled { cursor: default; }
+  button.primary {
+    width: 100%;
+    margin-top: 18px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  button.primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+  .result { font-size: 16px; line-height: 1.7; text-align: center; }
+  .result .score { font-size: 32px; font-weight: 700; color: #2563eb; }
+  .review { margin-top: 16px; font-size: 13px; color: #475569; text-align: left; }
+  .review li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>慣用句・ことわざクイズ</h1>
+    <div class="sub">意味を4択で答えよう（全5問）</div>
+
+    <div id="quiz">
+      <div class="progress" id="progress"></div>
+      <div class="question" id="question"></div>
+      <div class="choices" id="choices"></div>
+      <button class="primary" id="nextBtn" disabled>次へ</button>
+    </div>
+
+    <div id="result" class="result" style="display:none;"></div>
+  </div>
+
+<script>
+  const bank = [
+    { q: "「猫の手も借りたい」の意味は？", choices: ["とてもいそがしいこと", "とても静かなこと", "とても難しいこと", "とても楽しいこと"], answer: 0 },
+    { q: "「馬の耳に念仏」の意味は？", choices: ["言っても効き目がないこと", "とても速く走ること", "とても優しいこと", "たくさん食べること"], answer: 0 },
+    { q: "「石の上にも三年」の意味は？", choices: ["がまん強く続ければ成功すること", "石はとても重いこと", "三年間休むこと", "早くあきらめること"], answer: 0 },
+    { q: "「頭を冷やす」の意味は？", choices: ["落ち着いて考えること", "頭が痛くなること", "お風呂に入ること", "早く寝ること"], answer: 0 },
+    { q: "「口が軽い」の意味は？", choices: ["秘密をすぐしゃべってしまうこと", "食べるのが速いこと", "歌が上手なこと", "よく笑うこと"], answer: 0 },
+    { q: "「二階から目薬」の意味は？", choices: ["回りくどくて効き目がないこと", "目がとてもいいこと", "高い所が好きなこと", "薬をたくさん飲むこと"], answer: 0 },
+    { q: "「ちりも積もれば山となる」の意味は？", choices: ["小さなことも積み重なれば大きくなること", "山はゴミが多いこと", "掃除は大変なこと", "ちりはすぐなくなること"], answer: 0 },
+    { q: "「花より団子」の意味は？", choices: ["見た目より実際に役立つものがよいこと", "花が団子より美しいこと", "春が一番好きな季節ということ", "食べ物がきらいなこと"], answer: 0 },
+    { q: "「かえるの子はかえる」の意味は？", choices: ["子は親に似るものだということ", "かえるは水の中で育つこと", "子どもはすぐ大きくなること", "かえるは歌が上手なこと"], answer: 0 },
+    { q: "「耳が痛い」の意味は？", choices: ["自分の弱点を言われてつらいこと", "耳の病気になること", "うるさい音を聞くこと", "耳がとてもよく聞こえること"], answer: 0 },
+  ];
+
+  const TOTAL = 5;
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function buildQuestion(item) {
+    const correctText = item.choices[item.answer];
+    const shuffledChoices = shuffle(item.choices);
+    return {
+      q: item.q,
+      choices: shuffledChoices,
+      answer: shuffledChoices.indexOf(correctText),
+    };
+  }
+
+  const questions = shuffle(bank).slice(0, TOTAL).map(buildQuestion);
+
+  let index = 0;
+  let score = 0;
+  const history = [];
+
+  const progressEl = document.getElementById("progress");
+  const questionEl = document.getElementById("question");
+  const choicesEl = document.getElementById("choices");
+  const nextBtn = document.getElementById("nextBtn");
+  const quizEl = document.getElementById("quiz");
+  const resultEl = document.getElementById("result");
+
+  function renderQuestion() {
+    const item = questions[index];
+    progressEl.textContent = `${index + 1} / ${questions.length} 問`;
+    questionEl.textContent = item.q;
+    choicesEl.innerHTML = "";
+    nextBtn.disabled = true;
+
+    item.choices.forEach((choice, i) => {
+      const btn = document.createElement("button");
+      btn.className = "choice";
+      btn.textContent = choice;
+      btn.addEventListener("click", () => selectChoice(i));
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function selectChoice(selected) {
+    const item = questions[index];
+    const buttons = choicesEl.querySelectorAll(".choice");
+    buttons.forEach((btn, i) => {
+      btn.disabled = true;
+      if (i === item.answer) btn.classList.add("correct");
+      if (i === selected && selected !== item.answer) btn.classList.add("wrong");
+    });
+
+    const isCorrect = selected === item.answer;
+    if (isCorrect) score += 1;
+    history.push({ q: item.q, correct: isCorrect, correctText: item.choices[item.answer] });
+    nextBtn.disabled = false;
+  }
+
+  function showResult() {
+    quizEl.style.display = "none";
+    resultEl.style.display = "block";
+    const reviewItems = history
+      .map((h) => `<li>${h.correct ? "◯" : "✕"} ${h.q}（正解: ${h.correctText}）</li>`)
+      .join("");
+    resultEl.innerHTML = `
+      <div>結果</div>
+      <div class="score">${score} / ${questions.length}</div>
+      <ul class="review">${reviewItems}</ul>
+      <button class="primary" id="retryBtn">もう一度挑戦する</button>
+    `;
+    document.getElementById("retryBtn").addEventListener("click", restart);
+  }
+
+  function restart() {
+    location.reload();
+  }
+
+  nextBtn.addEventListener("click", () => {
+    index += 1;
+    if (index >= questions.length) {
+      showResult();
+    } else {
+      renderQuestion();
+    }
+  });
+
+  renderQuestion();
+</script>
+</body>
+</html>
