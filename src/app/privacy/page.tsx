@@ -58,7 +58,7 @@ export default function PrivacyPage() {
       <p>
         本ポリシーに関するお問い合わせは、下記までご連絡ください。
         <br />
-        メール: johnson132333@gmail.com
+        メール: kyozai.cafe@gmail.com
       </p>
 
       <p className="mt-10 text-xs text-slate-400">最終更新日: 2026年7月22日</p>
