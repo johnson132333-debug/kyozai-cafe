@@ -48,7 +48,7 @@ function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
           <button
             type="button"
             onClick={crumb.onClick}
-            className="rounded-full border-2 border-slate-200 px-4 py-1.5 text-sm font-bold text-slate-600 hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+            className="rounded-full border-2 border-slate-200 bg-white px-4 py-1.5 text-sm font-bold text-slate-600 shadow-sm transition-colors duration-150 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-600 dark:hover:bg-slate-800 dark:hover:text-blue-400"
           >
             {crumb.label}
           </button>
@@ -86,7 +86,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
           <Link
             key={material.slug}
             href={`/students/${material.slug}`}
-            className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-6 text-center transition hover:scale-[1.03] active:scale-[0.98] ${style(
+            className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-6 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md active:translate-y-0 active:scale-[0.98] ${style(
               material.slug
             )}`}
           >
@@ -140,7 +140,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
               key={grade}
               type="button"
               onClick={() => goTo({ grade })}
-              className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-8 text-center transition hover:scale-[1.03] active:scale-[0.98] ${
+              className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-8 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md active:translate-y-0 active:scale-[0.98] ${
                 GRADE_STYLES[grade] ?? DEFAULT_GRADE_STYLE
               }`}
             >
@@ -153,7 +153,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
           <button
             type="button"
             onClick={() => goTo({ all: true })}
-            className="rounded-full border-2 border-slate-200 px-5 py-2 text-sm font-medium text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            className="rounded-full border-2 border-slate-200 bg-white px-5 py-2 text-sm font-medium text-slate-500 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
           >
             ぜんぶ見る
           </button>
@@ -194,7 +194,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
                 key={subject}
                 type="button"
                 onClick={() => goTo({ grade: selectedGrade, subject })}
-                className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-8 text-center transition hover:scale-[1.03] active:scale-[0.98] ${
+                className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-8 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md active:translate-y-0 active:scale-[0.98] ${
                   SUBJECT_STYLES[subject] ?? DEFAULT_SUBJECT_STYLE
                 }`}
               >
@@ -232,7 +232,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
               key={unit}
               type="button"
               onClick={() => goTo({ grade: selectedGrade, subject: selectedSubject, unit })}
-              className="rounded-xl border-2 border-slate-200 bg-white px-5 py-4 text-center text-base font-bold text-slate-800 transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-blue-500 dark:hover:bg-slate-800"
+              className="rounded-xl border-2 border-slate-200 bg-white px-5 py-4 text-center text-base font-bold text-slate-800 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-blue-500 dark:hover:bg-slate-800"
             >
               {unit}
             </button>

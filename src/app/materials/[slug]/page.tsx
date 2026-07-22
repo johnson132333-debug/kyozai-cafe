@@ -21,7 +21,7 @@ export async function generateMetadata(
   const material = getMaterial(slug);
   if (!material) return {};
   return {
-    title: `${material.title} | 教材ラボ`,
+    title: `${material.title} | 教材カフェ`,
     description: material.description,
   };
 }
@@ -42,7 +42,7 @@ export default async function MaterialPage(
     <div className="mx-auto max-w-5xl px-6 py-10">
       <Link
         href="/"
-        className="mb-6 inline-block text-sm text-blue-600 hover:underline dark:text-blue-400"
+        className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
       >
         ← 教材一覧に戻る
       </Link>
@@ -73,11 +73,11 @@ export default async function MaterialPage(
         </div>
         <div className="space-y-6">
           <AdSlot slot="0000000001" />
-          <div className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-            <h2 className="mb-2 text-sm font-semibold text-slate-900 dark:text-white">
-              使い方
+          <div className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+            <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-white">
+              <span>📝</span> 使い方
             </h2>
-            <ol className="list-decimal space-y-1 pl-4">
+            <ol className="list-decimal space-y-1.5 pl-4">
               <li>左のプレビューでその場に動作を確認</li>
               <li>「コードを表示」から中身をチェック</li>
               <li>「コードをコピー」または「ダウンロード」</li>

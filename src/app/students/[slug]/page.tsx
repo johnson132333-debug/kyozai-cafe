@@ -41,7 +41,7 @@ export default async function StudentPlayPage(
       <div className="mb-4 flex items-center justify-between gap-3">
         <Link
           href="/students"
-          className="shrink-0 rounded-full bg-slate-900 px-6 py-3 text-base font-bold text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+          className="shrink-0 rounded-full bg-slate-900 px-6 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
         >
           ← もどる
         </Link>
@@ -55,7 +55,7 @@ export default async function StudentPlayPage(
         <CopyLinkButton />
       </div>
 
-      <div className="overflow-hidden rounded-2xl border-4 border-slate-200 dark:border-slate-800">
+      <div className="overflow-hidden rounded-2xl border-4 border-slate-200 shadow-lg dark:border-slate-800">
         <iframe
           title={material.title}
           srcDoc={code}
