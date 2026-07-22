@@ -11,7 +11,14 @@ export type Material = {
   grade: string;
   description: string;
   tags: string[];
+  // 児童生徒が自分で操作することを想定しない教員操作前提のツールは false にする。
+  // 未指定は true（児童生徒用ページに表示）として扱う。
+  studentFacing?: boolean;
 };
+
+export function isStudentFacing(material: Material): boolean {
+  return material.studentFacing !== false;
+}
 
 // 教科の表示順（学校でよくある並び順）。ここにない教科は末尾に追加されます。
 const SUBJECT_ORDER = ["算数", "国語", "社会", "理科", "英語", "学級経営", "特別支援"];

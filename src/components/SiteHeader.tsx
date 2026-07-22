@@ -14,13 +14,19 @@ export function SiteHeader() {
         </Link>
         <nav className="flex items-center gap-4 text-sm">
           <a
-            href="#materials"
+            href="/#materials"
             className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
           >
             教材一覧
           </a>
+          <Link
+            href="/students"
+            className="rounded-full bg-blue-50 px-3 py-1.5 font-medium text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900"
+          >
+            児童生徒用ページ
+          </Link>
           <a
-            href="#about"
+            href="/#about"
             className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
           >
             このサイトについて
