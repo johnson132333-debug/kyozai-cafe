@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Script from "next/script";
 
 type AdSlotProps = {
   slot: string;
@@ -13,6 +14,9 @@ declare global {
   }
 }
 
+// AdSenseの読み込みスクリプトは、このコンポーネントが実際にレンダーされる
+// ページ（先生用ページ）だけで読み込まれる。児童生徒用ページ(/students)は
+// AdSlotを使わないため、AdSenseへのリクエスト自体が発生しない。
 export function AdSlot({ slot, className }: AdSlotProps) {
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
 
@@ -36,13 +40,21 @@ export function AdSlot({ slot, className }: AdSlotProps) {
   }
 
   return (
-    <ins
-      className={`adsbygoogle block ${className ?? ""}`}
-      style={{ display: "block" }}
-      data-ad-client={client}
-      data-ad-slot={slot}
-      data-ad-format="auto"
-      data-full-width-responsive="true"
-    />
+    <>
+      <Script
+        async
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`}
+        crossOrigin="anonymous"
+        strategy="afterInteractive"
+      />
+      <ins
+        className={`adsbygoogle block ${className ?? ""}`}
+        style={{ display: "block" }}
+        data-ad-client={client}
+        data-ad-slot={slot}
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
+    </>
   );
 }

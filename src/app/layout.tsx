@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -23,8 +22,6 @@ export const metadata: Metadata = {
     "クロード(Claude)で作成した授業用ツール・クイズ・シミュレーションをブラウザ上でその場に試し、コードをコピーして学校の授業ですぐに使える教材ライブラリです。",
 };
 
-const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -39,14 +36,6 @@ export default function RootLayout({
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />
-        {adsenseClient && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        )}
       </body>
     </html>
   );
