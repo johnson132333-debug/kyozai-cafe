@@ -74,7 +74,9 @@
     transition: all 0.15s ease-out;
   }
   .stage-card:hover { border-color: #93c5fd; }
-  .stage-card .emoji { font-size: 40px; display: block; margin-bottom: 6px; }
+  .stage-card .emoji { display: flex; justify-content: center; margin-bottom: 6px; }
+  .stage-card .emoji svg { width: 44px; height: 44px; }
+  .slot svg { width: 34px; height: 34px; }
   .stage-card .label { font-size: 13px; font-weight: 700; color: #334155; line-height: 1.4; }
   .stage-card.placed { visibility: hidden; }
   .stage-card.shake { animation: shake 0.4s; border-color: #dc2626; }
@@ -139,12 +141,20 @@
   </div>
 
 <script>
+  const ICONS = {
+    seed: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="55" rx="22" ry="30" fill="#8B6B47"/><ellipse cx="42" cy="42" rx="6" ry="9" fill="#A9835C" opacity="0.6"/></svg>`,
+    sprout: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="78" rx="16" ry="14" fill="#8B6B47"/><path d="M50 78 Q50 55 50 45" stroke="#6FA96B" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M50 50 Q40 44 32 48" fill="#6FA96B"/><path d="M50 46 Q60 40 68 44" fill="#6FA96B"/></svg>`,
+    leaves: `<svg viewBox="0 0 100 100"><line x1="50" y1="90" x2="50" y2="45" stroke="#4F8A4B" stroke-width="4" stroke-linecap="round"/><ellipse cx="32" cy="42" rx="16" ry="11" fill="#6FA96B" transform="rotate(-20 32 42)"/><ellipse cx="68" cy="42" rx="16" ry="11" fill="#6FA96B" transform="rotate(20 68 42)"/></svg>`,
+    vine: `<svg viewBox="0 0 100 100"><path d="M50 92 C50 70 30 65 35 45 C38 32 55 30 50 15" stroke="#4F8A4B" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="30" cy="60" rx="12" ry="8" fill="#6FA96B" transform="rotate(-30 30 60)"/><ellipse cx="45" cy="35" rx="12" ry="8" fill="#6FA96B" transform="rotate(20 45 35)"/><ellipse cx="58" cy="20" rx="11" ry="7" fill="#6FA96B" transform="rotate(-10 58 20)"/></svg>`,
+    flower: `<svg viewBox="0 0 100 100"><path d="M50 88 C50 70 42 60 45 45" stroke="#4F8A4B" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="32" cy="62" rx="10" ry="7" fill="#6FA96B" transform="rotate(-25 32 62)"/><path d="M50 42 C62 42 70 32 70 22 C70 12 60 8 50 8 C40 8 30 12 30 22 C30 32 38 42 50 42 Z" fill="#7FA9DE"/><circle cx="50" cy="24" r="5" fill="#F4D77A"/></svg>`,
+  };
+
   const stages = [
-    { emoji: "🌰", label: "たね" },
-    { emoji: "🌱", label: "めが でる" },
-    { emoji: "🍀", label: "ふたば" },
-    { emoji: "🌿", label: "つるが のびる" },
-    { emoji: "🌸", label: "花が さく" },
+    { icon: ICONS.seed, label: "たね" },
+    { icon: ICONS.sprout, label: "めが でる" },
+    { icon: ICONS.leaves, label: "ふたば" },
+    { icon: ICONS.vine, label: "つるが のびる" },
+    { icon: ICONS.flower, label: "花が さく" },
   ];
 
   const laneEl = document.getElementById("lane");
@@ -171,7 +181,7 @@
     stages.forEach((stage, i) => {
       const slot = document.createElement("div");
       slot.className = "slot" + (i < nextIndex ? " filled" : "");
-      slot.textContent = i < nextIndex ? stages[i].emoji : "";
+      slot.innerHTML = i < nextIndex ? stages[i].icon : "";
       laneEl.appendChild(slot);
     });
   }
@@ -190,7 +200,7 @@
       const cardEl = document.createElement("button");
       cardEl.type = "button";
       cardEl.className = "stage-card" + (stageIndex < nextIndex ? " placed" : "");
-      cardEl.innerHTML = `<span class="emoji">${stage.emoji}</span><span class="label">${stage.label}</span>`;
+      cardEl.innerHTML = `<span class="emoji">${stage.icon}</span><span class="label">${stage.label}</span>`;
       cardEl.addEventListener("click", () => handleTap(stageIndex, cardEl));
       gridEl.appendChild(cardEl);
     });

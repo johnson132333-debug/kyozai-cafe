@@ -3,14 +3,10 @@
 import { useMemo, useState } from "react";
 import type { Material } from "@/lib/materials";
 import { getOrderedGrades } from "@/lib/grades";
-import { GRADE_STYLES, GRADE_ICONS, GRADE_LABELS, DEFAULT_GRADE_STYLE } from "@/lib/gradeDisplay";
-import {
-  SUBJECT_STYLES,
-  SUBJECT_ICONS,
-  DEFAULT_SUBJECT_STYLE,
-  DEFAULT_SUBJECT_ICON,
-} from "@/lib/subjectDisplay";
+import { GRADE_STYLES, GRADE_LABELS, DEFAULT_GRADE_STYLE } from "@/lib/gradeDisplay";
+import { SUBJECT_STYLES, DEFAULT_SUBJECT_STYLE } from "@/lib/subjectDisplay";
 import { MaterialCard } from "./MaterialCard";
+import { GradeIcon, SubjectIcon } from "./icons";
 
 type MaterialGridProps = {
   materials: Material[];
@@ -172,7 +168,7 @@ export function MaterialGrid({ materials, subjects }: MaterialGridProps) {
                 GRADE_STYLES[grade] ?? DEFAULT_GRADE_STYLE
               }`}
             >
-              <span className="text-4xl">{GRADE_ICONS[grade] ?? "⭐"}</span>
+              <GradeIcon grade={grade} className="h-10 w-10" />
               <span className="text-lg font-bold">{GRADE_LABELS[grade] ?? grade}</span>
             </button>
           ))}
@@ -225,7 +221,7 @@ export function MaterialGrid({ materials, subjects }: MaterialGridProps) {
                     SUBJECT_STYLES[subject] ?? DEFAULT_SUBJECT_STYLE
                   }`}
                 >
-                  <span className="text-4xl">{SUBJECT_ICONS[subject] ?? DEFAULT_SUBJECT_ICON}</span>
+                  <SubjectIcon subject={subject} className="h-10 w-10" />
                   <span className="text-lg font-bold">{subject}</span>
                   <span className="text-xs font-normal opacity-70">{count}件</span>
                 </button>

@@ -14,15 +14,3 @@ export const SUBJECT_STYLES: Record<string, string> = {
 export const DEFAULT_SUBJECT_STYLE =
   "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700";
 
-export const SUBJECT_ICONS: Record<string, string> = {
-  算数: "🔢",
-  国語: "📖",
-  生活科: "🌱",
-  社会: "🗾",
-  理科: "🔬",
-  英語: "🔤",
-  学級経営: "🏫",
-  特別支援: "🌈",
-};
-
-export const DEFAULT_SUBJECT_ICON = "📚";

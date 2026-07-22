@@ -4,15 +4,10 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Material } from "@/lib/materials";
 import { getOrderedGrades } from "@/lib/grades";
-import { GRADE_STYLES, GRADE_ICONS, GRADE_LABELS, DEFAULT_GRADE_STYLE } from "@/lib/gradeDisplay";
-import {
-  SUBJECT_STYLES,
-  SUBJECT_ICONS,
-  DEFAULT_SUBJECT_STYLE,
-  DEFAULT_SUBJECT_ICON,
-} from "@/lib/subjectDisplay";
-import { STUDENT_ICONS, DEFAULT_STUDENT_ICON } from "@/lib/studentIcons";
+import { GRADE_STYLES, GRADE_LABELS, DEFAULT_GRADE_STYLE } from "@/lib/gradeDisplay";
+import { SUBJECT_STYLES, DEFAULT_SUBJECT_STYLE } from "@/lib/subjectDisplay";
 import { CopyLinkButton } from "./CopyLinkButton";
+import { GradeIcon, SubjectIcon, MaterialIcon } from "./icons";
 
 type StudentGradeGridProps = {
   materials: Material[];
@@ -75,11 +70,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
   };
   const resetToGradePicker = () => goTo({});
 
-  function renderTiles(
-    items: Material[],
-    style: (slug: string) => string,
-    icon: (slug: string) => string
-  ) {
+  function renderTiles(items: Material[], style: (slug: string) => string) {
     return (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {items.map((material) => (
@@ -90,7 +81,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
               material.slug
             )}`}
           >
-            <span className="text-5xl">{icon(material.slug)}</span>
+            <MaterialIcon slug={material.slug} className="h-12 w-12" />
             <span className="text-base font-bold">{material.title}</span>
           </Link>
         ))}
@@ -114,11 +105,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
             return (
               <section key={subject}>
                 <h2 className="mb-4 text-xl font-bold text-slate-900 dark:text-white">{subject}</h2>
-                {renderTiles(
-                  items,
-                  () => style,
-                  (slug) => STUDENT_ICONS[slug] ?? DEFAULT_STUDENT_ICON
-                )}
+                {renderTiles(items, () => style)}
               </section>
             );
           })}
@@ -144,7 +131,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
                 GRADE_STYLES[grade] ?? DEFAULT_GRADE_STYLE
               }`}
             >
-              <span className="text-4xl">{GRADE_ICONS[grade] ?? "⭐"}</span>
+              <GradeIcon grade={grade} className="h-10 w-10" />
               <span className="text-lg font-bold">{GRADE_LABELS[grade] ?? grade}</span>
             </button>
           ))}
@@ -198,7 +185,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
                   SUBJECT_STYLES[subject] ?? DEFAULT_SUBJECT_STYLE
                 }`}
               >
-                <span className="text-4xl">{SUBJECT_ICONS[subject] ?? DEFAULT_SUBJECT_ICON}</span>
+                <SubjectIcon subject={subject} className="h-10 w-10" />
                 <span className="text-lg font-bold">{subject}</span>
               </button>
             ))}
@@ -267,11 +254,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
           アプリがまだありません。
         </p>
       ) : (
-        renderTiles(
-          finalMaterials,
-          () => SUBJECT_STYLES[selectedSubject] ?? DEFAULT_SUBJECT_STYLE,
-          (slug) => STUDENT_ICONS[slug] ?? DEFAULT_STUDENT_ICON
-        )
+        renderTiles(finalMaterials, () => SUBJECT_STYLES[selectedSubject] ?? DEFAULT_SUBJECT_STYLE)
       )}
     </div>
   );

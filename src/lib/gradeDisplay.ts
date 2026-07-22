@@ -15,17 +15,6 @@ export const GRADE_STYLES: Record<string, string> = {
 export const DEFAULT_GRADE_STYLE =
   "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700";
 
-export const GRADE_ICONS: Record<string, string> = {
-  小学1年: "1️⃣",
-  小学2年: "2️⃣",
-  小学3年: "3️⃣",
-  小学4年: "4️⃣",
-  小学5年: "5️⃣",
-  小学6年: "6️⃣",
-  中学1年: "🎓",
-  全学年: "🌈",
-};
-
 export const GRADE_LABELS: Record<string, string> = {
   小学1年: "1年生",
   小学2年: "2年生",
