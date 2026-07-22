@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>こまったときどうする？</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+  }
+  .wrap { width: 100%; max-width: 460px; }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 16px; text-align: center; }
+  .progress { font-size: 12px; color: #94a3b8; text-align: right; margin-bottom: 8px; }
+
+  .scene {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .scene .icon { font-size: 56px; margin-bottom: 10px; }
+  .scene .situation { font-size: 17px; font-weight: 700; color: #334155; line-height: 1.6; }
+
+  .choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .choices button {
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 3px solid #e2e8f0;
+    background: #ffffff;
+    font-size: 15px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .choices button:disabled { cursor: default; }
+  .choices button.correct { border-color: #16a34a; background: #dcfce7; }
+  .choices button.incorrect { border-color: #f59e0b; background: #fffbeb; }
+
+  .feedback {
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+  .feedback.good { background: #dcfce7; color: #15803d; }
+  .feedback.gentle { background: #fffbeb; color: #92400e; }
+
+  .next-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+  }
+  .finished {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 30px 24px;
+    text-align: center;
+  }
+  .finished .big { font-size: 40px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>こまったときどうする？</h1>
+    <div class="sub">ばめんに合う こうどうを えらんでね</div>
+
+    <div id="game">
+      <div class="progress" id="progress"></div>
+      <div class="scene">
+        <div class="icon" id="sceneIcon"></div>
+        <div class="situation" id="sceneText"></div>
+      </div>
+      <div class="choices" id="choices"></div>
+      <div class="feedback" id="feedback" style="display:none;"></div>
+      <button class="next-btn" id="nextBtn" style="display:none;">つぎへ</button>
+    </div>
+
+    <div id="finishedBox" class="finished" style="display:none;">
+      <div class="big">🌟</div>
+      <div>ぜんぶ おわりました！</div>
+      <button class="next-btn" id="restartBtn" style="margin-top:16px;">もういちどやる</button>
+    </div>
+  </div>
+
+<script>
+  const scenarios = [
+    {
+      icon: "😢",
+      text: "友だちが泣いています。あなたはどうする？",
+      choices: [
+        { text: "気づかないふりをする", correct: false, feedback: "友だちは 気づいてほしいと 思っているかもしれません。「どうしたの？」と 声をかけてみましょう。" },
+        { text: "「どうしたの？」と声をかける", correct: true, feedback: "そのとおり！こまっている人には やさしく 声をかけると、安心してもらえます。" },
+        { text: "笑ってしまう", correct: false, feedback: "笑われると 友だちは かなしい気持ちに なってしまいます。「どうしたの？」と 聞いてみましょう。" },
+      ],
+    },
+    {
+      icon: "📚",
+      text: "友だちの消しゴムを借りたいです。あなたはどうする？",
+      choices: [
+        { text: "だまって使う", correct: false, feedback: "だまって使うと、友だちは びっくりしたり こまったり します。「かして」と 聞いてから 使いましょう。" },
+        { text: "「かしてください」と聞く", correct: true, feedback: "そのとおり！使いたいものは、先に「かして」と 聞くと 気持ちよく貸してもらえます。" },
+        { text: "取り上げる", correct: false, feedback: "取り上げると 友だちを おどろかせて しまいます。先に「かして」と 聞きましょう。" },
+      ],
+    },
+    {
+      icon: "❓",
+      text: "授業でわからないところがあります。あなたはどうする？",
+      choices: [
+        { text: "そのままにしておく", correct: false, feedback: "わからないままだと、あとで もっと こまってしまいます。先生に聞いてみましょう。" },
+        { text: "先生に「教えてください」と聞く", correct: true, feedback: "そのとおり！わからないときは 聞くのが いちばんです。恥ずかしいことでは ありません。" },
+        { text: "となりの人の答えを見る", correct: false, feedback: "自分の力で わかるように、先生に聞いてみましょう。" },
+      ],
+    },
+    {
+      icon: "🚶",
+      text: "並んでいたら、列に横入りされました。あなたはどうする？",
+      choices: [
+        { text: "たたく", correct: false, feedback: "たたくのは よくありません。まず 言葉で 気持ちを伝えましょう。" },
+        { text: "「じゅんばんです」と伝える", correct: true, feedback: "そのとおり！こまったときは、まず 言葉で 気持ちを伝えるのが 大切です。" },
+        { text: "がまんして何も言わない", correct: false, feedback: "がまんしすぎず、「じゅんばんです」と 落ち着いて 伝えてみましょう。" },
+      ],
+    },
+    {
+      icon: "🏫",
+      text: "授業に少し遅れそうです。あなたはどうする？",
+      choices: [
+        { text: "だまって静かに入る", correct: false, feedback: "だまって入ると、先生がびっくりしてしまいます。ひとこと伝えましょう。" },
+        { text: "「遅れてすみません」と言って入る", correct: true, feedback: "そのとおり！遅れたときは、ひとこと伝えると 相手に気持ちが伝わります。" },
+        { text: "あきらめて教室に入らない", correct: false, feedback: "遅れても、ひとこと伝えて 教室に入りましょう。" },
+      ],
+    },
+  ];
+
+  let index = 0;
+  const progress = document.getElementById("progress");
+  const sceneIcon = document.getElementById("sceneIcon");
+  const sceneText = document.getElementById("sceneText");
+  const choicesEl = document.getElementById("choices");
+  const feedbackEl = document.getElementById("feedback");
+  const nextBtn = document.getElementById("nextBtn");
+  const gameEl = document.getElementById("game");
+  const finishedBox = document.getElementById("finishedBox");
+
+  function renderScene() {
+    const scene = scenarios[index];
+    progress.textContent = `${index + 1} / ${scenarios.length}`;
+    sceneIcon.textContent = scene.icon;
+    sceneText.textContent = scene.text;
+    feedbackEl.style.display = "none";
+    nextBtn.style.display = "none";
+    choicesEl.innerHTML = "";
+
+    scene.choices.forEach((choice) => {
+      const btn = document.createElement("button");
+      btn.textContent = choice.text;
+      btn.addEventListener("click", () => selectChoice(choice, btn));
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function selectChoice(choice, btnEl) {
+    document.querySelectorAll(".choices button").forEach((b) => (b.disabled = true));
+    btnEl.classList.add(choice.correct ? "correct" : "incorrect");
+
+    feedbackEl.textContent = choice.feedback;
+    feedbackEl.className = "feedback " + (choice.correct ? "good" : "gentle");
+    feedbackEl.style.display = "block";
+    nextBtn.style.display = "block";
+  }
+
+  nextBtn.addEventListener("click", () => {
+    index += 1;
+    if (index >= scenarios.length) {
+      gameEl.style.display = "none";
+      finishedBox.style.display = "block";
+    } else {
+      renderScene();
+    }
+  });
+
+  document.getElementById("restartBtn").addEventListener("click", () => {
+    index = 0;
+    gameEl.style.display = "block";
+    finishedBox.style.display = "none";
+    renderScene();
+  });
+
+  renderScene();
+</script>
+</body>
+</html>

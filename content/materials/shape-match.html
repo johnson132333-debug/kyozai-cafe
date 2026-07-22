@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>おなじかたちさがし</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+  }
+  .wrap { width: 100%; max-width: 420px; }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 16px; text-align: center; }
+
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 10px;
+  }
+  .status-row strong { color: #1f2937; }
+
+  .target-card {
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 14px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .target-card svg { width: 90px; height: 90px; }
+  .target-note { font-size: 12px; color: #94a3b8; margin-bottom: 16px; text-align: center; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    border: 3px solid #e2e8f0;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .cell svg { width: 62%; height: 62%; }
+  .cell.correct { border-color: #16a34a; background: #dcfce7; }
+  .cell.wrong { border-color: #dc2626; animation: shake 0.3s; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>おなじかたちさがし</h1>
+    <div class="sub">見本と まったく同じ形を さがしてタップしよう</div>
+
+    <div class="status-row">
+      <span>もんだい：<strong id="roundNum">1</strong></span>
+      <span>せいかい：<strong id="scoreNum">0</strong></span>
+    </div>
+
+    <div class="target-card"><div id="targetSvg"></div></div>
+    <div class="target-note">↑ これと おなじかたち はどれ？</div>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+<script>
+  const SHAPES = ["triangle", "pentagon", "hexagon", "star"];
+  const COLORS = ["#ef4444", "#2563eb", "#16a34a", "#f59e0b", "#7c3aed"];
+  const ROTATIONS = [0, 30, 60, 90, 120];
+  const SIZES = [24, 32];
+
+  const NS = "http://www.w3.org/2000/svg";
+  const roundNumEl = document.getElementById("roundNum");
+  const scoreNumEl = document.getElementById("scoreNum");
+  const targetSvgEl = document.getElementById("targetSvg");
+  const gridEl = document.getElementById("grid");
+
+  let round = 1;
+  let score = 0;
+  let locked = false;
+
+  function pickOther(list, current) {
+    const options = list.filter((v) => v !== current);
+    return options[Math.floor(Math.random() * options.length)];
+  }
+
+  function regularPolygonPoints(sides, radius, rotationDeg, cx, cy) {
+    const points = [];
+    for (let i = 0; i < sides; i++) {
+      const angle = ((-90 + rotationDeg + (i * 360) / sides) * Math.PI) / 180;
+      points.push(`${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)}`);
+    }
+    return points.join(" ");
+  }
+
+  function starPoints(radius, rotationDeg, cx, cy) {
+    const points = [];
+    const inner = radius * 0.45;
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 === 0 ? radius : inner;
+      const angle = ((-90 + rotationDeg + (i * 360) / 10) * Math.PI) / 180;
+      points.push(`${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`);
+    }
+    return points.join(" ");
+  }
+
+  function buildShapeSvg(shape) {
+    const cx = 40, cy = 40;
+    let points;
+    if (shape.type === "triangle") points = regularPolygonPoints(3, shape.radius, shape.rotation, cx, cy);
+    else if (shape.type === "pentagon") points = regularPolygonPoints(5, shape.radius, shape.rotation, cx, cy);
+    else if (shape.type === "hexagon") points = regularPolygonPoints(6, shape.radius, shape.rotation, cx, cy);
+    else points = starPoints(shape.radius, shape.rotation, cx, cy);
+
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 80 80");
+    const polygon = document.createElementNS(NS, "polygon");
+    polygon.setAttribute("points", points);
+    polygon.setAttribute("fill", shape.color);
+    svg.appendChild(polygon);
+    return svg;
+  }
+
+  function randomShape() {
+    return {
+      type: SHAPES[Math.floor(Math.random() * SHAPES.length)],
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      rotation: ROTATIONS[Math.floor(Math.random() * ROTATIONS.length)],
+      radius: SIZES[Math.floor(Math.random() * SIZES.length)],
+    };
+  }
+
+  function makeDistractor(target) {
+    const attr = ["color", "rotation", "radius"][Math.floor(Math.random() * 3)];
+    const distractor = { ...target };
+    if (attr === "color") distractor.color = pickOther(COLORS, target.color);
+    if (attr === "rotation") distractor.rotation = pickOther(ROTATIONS, target.rotation);
+    if (attr === "radius") distractor.radius = pickOther(SIZES, target.radius);
+    return distractor;
+  }
+
+  function shapeKey(s) {
+    return `${s.type}-${s.color}-${s.rotation}-${s.radius}`;
+  }
+
+  function newRound() {
+    locked = false;
+    const target = randomShape();
+    targetSvgEl.innerHTML = "";
+    targetSvgEl.appendChild(buildShapeSvg(target));
+
+    const candidates = [target];
+    const seenKeys = new Set([shapeKey(target)]);
+    let guard = 0;
+    while (candidates.length < 9 && guard < 200) {
+      guard += 1;
+      const d = makeDistractor(target);
+      d.type = target.type;
+      const key = shapeKey(d);
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        candidates.push(d);
+      }
+    }
+
+    // シャッフル
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+
+    gridEl.innerHTML = "";
+    candidates.forEach((shape) => {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.appendChild(buildShapeSvg(shape));
+      const isCorrect = shapeKey(shape) === shapeKey(target);
+      cell.addEventListener("click", () => handleClick(cell, isCorrect));
+      gridEl.appendChild(cell);
+    });
+
+    roundNumEl.textContent = round;
+    scoreNumEl.textContent = score;
+  }
+
+  function handleClick(cell, isCorrect) {
+    if (locked) return;
+    if (isCorrect) {
+      locked = true;
+      cell.classList.add("correct");
+      score += 1;
+      round += 1;
+      setTimeout(newRound, 500);
+    } else {
+      cell.classList.add("wrong");
+      setTimeout(() => cell.classList.remove("wrong"), 300);
+    }
+  }
+
+  newRound();
+</script>
+</body>
+</html>
