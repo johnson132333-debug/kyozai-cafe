@@ -5,6 +5,12 @@ import Link from "next/link";
 import type { Material } from "@/lib/materials";
 import { getOrderedGrades } from "@/lib/grades";
 import { GRADE_STYLES, GRADE_ICONS, GRADE_LABELS, DEFAULT_GRADE_STYLE } from "@/lib/gradeDisplay";
+import {
+  SUBJECT_STYLES,
+  SUBJECT_ICONS,
+  DEFAULT_SUBJECT_STYLE,
+  DEFAULT_SUBJECT_ICON,
+} from "@/lib/subjectDisplay";
 import { STUDENT_ICONS, DEFAULT_STUDENT_ICON } from "@/lib/studentIcons";
 
 type StudentGradeGridProps = {
@@ -12,35 +18,101 @@ type StudentGradeGridProps = {
   subjects: string[];
 };
 
-const SUBJECT_STYLES: Record<string, string> = {
-  算数: "bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-100 border-amber-300 dark:border-amber-800",
-  国語: "bg-rose-100 dark:bg-rose-950 text-rose-900 dark:text-rose-100 border-rose-300 dark:border-rose-800",
-  社会: "bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 border-emerald-300 dark:border-emerald-800",
-  理科: "bg-sky-100 dark:bg-sky-950 text-sky-900 dark:text-sky-100 border-sky-300 dark:border-sky-800",
-  英語: "bg-violet-100 dark:bg-violet-950 text-violet-900 dark:text-violet-100 border-violet-300 dark:border-violet-800",
-  学級経営: "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700",
-  特別支援: "bg-pink-100 dark:bg-pink-950 text-pink-900 dark:text-pink-100 border-pink-300 dark:border-pink-800",
-};
-const DEFAULT_SUBJECT_STYLE =
-  "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700";
+function uniqueUnitsInOrder(items: Material[]): string[] {
+  const seen: string[] = [];
+  for (const item of items) {
+    if (!seen.includes(item.unit)) seen.push(item.unit);
+  }
+  return seen;
+}
+
+type Crumb = { label: string; onClick: () => void };
+
+function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
+  return (
+    <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
+      {crumbs.map((crumb, i) => (
+        <span key={i} className="flex items-center gap-2">
+          {i > 0 && <span className="text-slate-300 dark:text-slate-600">›</span>}
+          <button
+            type="button"
+            onClick={crumb.onClick}
+            className="rounded-full border-2 border-slate-200 px-4 py-1.5 text-sm font-bold text-slate-600 hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+          >
+            {crumb.label}
+          </button>
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps) {
   const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
 
   const grades = useMemo(() => getOrderedGrades(materials.map((m) => m.grade)), [materials]);
 
-  const visibleMaterials = useMemo(() => {
-    if (showAll || !selectedGrade) return materials;
-    return materials.filter((m) => m.grade === selectedGrade || m.grade === "全学年");
-  }, [materials, selectedGrade, showAll]);
+  const resetToGradePicker = () => {
+    setSelectedGrade(null);
+    setShowAll(false);
+    setSelectedSubject(null);
+    setSelectedUnit(null);
+  };
 
-  const visibleSubjects = useMemo(
-    () => subjects.filter((s) => visibleMaterials.some((m) => m.subject === s)),
-    [subjects, visibleMaterials]
-  );
+  function renderTiles(
+    items: Material[],
+    style: (slug: string) => string,
+    icon: (slug: string) => string
+  ) {
+    return (
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+        {items.map((material) => (
+          <Link
+            key={material.slug}
+            href={`/students/${material.slug}`}
+            className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-6 text-center transition hover:scale-[1.03] active:scale-[0.98] ${style(
+              material.slug
+            )}`}
+          >
+            <span className="text-5xl">{icon(material.slug)}</span>
+            <span className="text-base font-bold">{material.title}</span>
+          </Link>
+        ))}
+      </div>
+    );
+  }
 
-  if (!selectedGrade && !showAll) {
+  // --- 「ぜんぶ見る」：教科ごとにグループ化した全件表示 ---
+  if (showAll) {
+    return (
+      <div>
+        <Breadcrumb crumbs={[{ label: "ぜんぶのアプリ", onClick: resetToGradePicker }]} />
+        <div className="space-y-12">
+          {subjects.map((subject) => {
+            const items = materials.filter((m) => m.subject === subject);
+            if (items.length === 0) return null;
+            const style = SUBJECT_STYLES[subject] ?? DEFAULT_SUBJECT_STYLE;
+            return (
+              <section key={subject}>
+                <h2 className="mb-4 text-xl font-bold text-slate-900 dark:text-white">{subject}</h2>
+                {renderTiles(
+                  items,
+                  () => style,
+                  (slug) => STUDENT_ICONS[slug] ?? DEFAULT_STUDENT_ICON
+                )}
+              </section>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // --- ステップ1：なんねんせい？ ---
+  if (!selectedGrade) {
     return (
       <div>
         <p className="mb-6 text-center text-base font-bold text-slate-700 dark:text-slate-300">
@@ -74,56 +146,108 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
     );
   }
 
-  return (
-    <div>
-      <div className="mb-8 flex items-center justify-center gap-3">
-        <span className="rounded-full bg-slate-900 px-4 py-1.5 text-sm font-bold text-white dark:bg-white dark:text-slate-900">
-          {showAll ? "ぜんぶのアプリ" : (GRADE_LABELS[selectedGrade!] ?? selectedGrade)}
-        </span>
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedGrade(null);
-            setShowAll(false);
-          }}
-          className="rounded-full border-2 border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400"
-        >
-          学年をえらびなおす
-        </button>
-      </div>
+  const gradeFiltered = materials.filter(
+    (m) => m.grade === selectedGrade || m.grade === "全学年"
+  );
+  const gradeCrumb: Crumb = {
+    label: GRADE_LABELS[selectedGrade] ?? selectedGrade,
+    onClick: resetToGradePicker,
+  };
 
-      <div className="space-y-12">
-        {visibleSubjects.map((subject) => {
-          const items = visibleMaterials.filter((m) => m.subject === subject);
-          if (items.length === 0) return null;
-          const style = SUBJECT_STYLES[subject] ?? DEFAULT_SUBJECT_STYLE;
+  // --- ステップ2：きょうかは なに？ ---
+  if (!selectedSubject) {
+    const subjectsHere = subjects.filter((s) => gradeFiltered.some((m) => m.subject === s));
 
-          return (
-            <section key={subject}>
-              <h2 className="mb-4 text-xl font-bold text-slate-900 dark:text-white">{subject}</h2>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                {items.map((material) => (
-                  <Link
-                    key={material.slug}
-                    href={`/students/${material.slug}`}
-                    className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-6 text-center transition hover:scale-[1.03] active:scale-[0.98] ${style}`}
-                  >
-                    <span className="text-5xl">
-                      {STUDENT_ICONS[material.slug] ?? DEFAULT_STUDENT_ICON}
-                    </span>
-                    <span className="text-base font-bold">{material.title}</span>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          );
-        })}
-        {visibleSubjects.length === 0 && (
+    return (
+      <div>
+        <Breadcrumb crumbs={[gradeCrumb]} />
+        <p className="mb-6 text-center text-base font-bold text-slate-700 dark:text-slate-300">
+          きょうかを えらんでね
+        </p>
+        {subjectsHere.length === 0 ? (
           <p className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">
-            この学年のアプリはまだありません。
+            このがくねんのアプリはまだありません。
           </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {subjectsHere.map((subject) => (
+              <button
+                key={subject}
+                type="button"
+                onClick={() => setSelectedSubject(subject)}
+                className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-8 text-center transition hover:scale-[1.03] active:scale-[0.98] ${
+                  SUBJECT_STYLES[subject] ?? DEFAULT_SUBJECT_STYLE
+                }`}
+              >
+                <span className="text-4xl">{SUBJECT_ICONS[subject] ?? DEFAULT_SUBJECT_ICON}</span>
+                <span className="text-lg font-bold">{subject}</span>
+              </button>
+            ))}
+          </div>
         )}
       </div>
+    );
+  }
+
+  const subjectFiltered = gradeFiltered.filter((m) => m.subject === selectedSubject);
+  const subjectCrumb: Crumb = {
+    label: selectedSubject,
+    onClick: () => {
+      setSelectedSubject(null);
+      setSelectedUnit(null);
+    },
+  };
+  const units = uniqueUnitsInOrder(subjectFiltered);
+
+  // --- ステップ3：どれにする？（たんげんが2つ以上あるときだけ）---
+  if (units.length > 1 && !selectedUnit) {
+    return (
+      <div>
+        <Breadcrumb crumbs={[gradeCrumb, subjectCrumb]} />
+        <p className="mb-6 text-center text-base font-bold text-slate-700 dark:text-slate-300">
+          どれにする？ えらんでね
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {units.map((unit) => (
+            <button
+              key={unit}
+              type="button"
+              onClick={() => setSelectedUnit(unit)}
+              className="rounded-xl border-2 border-slate-200 bg-white px-5 py-4 text-center text-base font-bold text-slate-800 transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-blue-500 dark:hover:bg-slate-800"
+            >
+              {unit}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // --- ステップ4：アプリ一覧 ---
+  const finalMaterials =
+    units.length > 1 && selectedUnit
+      ? subjectFiltered.filter((m) => m.unit === selectedUnit)
+      : subjectFiltered;
+
+  const crumbs = [gradeCrumb, subjectCrumb];
+  if (units.length > 1 && selectedUnit) {
+    crumbs.push({ label: selectedUnit, onClick: () => setSelectedUnit(null) });
+  }
+
+  return (
+    <div>
+      <Breadcrumb crumbs={crumbs} />
+      {finalMaterials.length === 0 ? (
+        <p className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">
+          アプリがまだありません。
+        </p>
+      ) : (
+        renderTiles(
+          finalMaterials,
+          () => SUBJECT_STYLES[selectedSubject] ?? DEFAULT_SUBJECT_STYLE,
+          (slug) => STUDENT_ICONS[slug] ?? DEFAULT_STUDENT_ICON
+        )
+      )}
     </div>
   );
 }
