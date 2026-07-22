@@ -14,6 +14,9 @@ export type Material = {
   // 児童生徒が自分で操作することを想定しない教員操作前提のツールは false にする。
   // 未指定は true（児童生徒用ページに表示）として扱う。
   studentFacing?: boolean;
+  // 同じ教科・学年内での並び順（小さいほど先）。教科書の年間指導計画で先に
+  // 習う単元を前に出したいときだけ指定する。未指定はタイトル順で末尾に回る。
+  order?: number;
 };
 
 export function isStudentFacing(material: Material): boolean {
@@ -34,9 +37,14 @@ export function getAllMaterials(): Material[] {
     .filter((file) => file.endsWith(".json"))
     .map((file) => file.replace(/\.json$/, ""));
 
-  return slugs
-    .map((slug) => readMeta(slug))
-    .sort((a, b) => a.title.localeCompare(b.title, "ja"));
+  return slugs.map((slug) => readMeta(slug)).sort(compareMaterials);
+}
+
+function compareMaterials(a: Material, b: Material): number {
+  const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+  const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+  if (orderA !== orderB) return orderA - orderB;
+  return a.title.localeCompare(b.title, "ja");
 }
 
 export function getMaterial(slug: string): Material | null {
