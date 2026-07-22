@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>長さくらべ</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 26px 20px;
+  }
+  h1 { font-size: 19px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 8px; text-align: center; }
+  .progress { font-size: 12px; color: #94a3b8; text-align: right; margin-bottom: 12px; }
+
+  .ruler-wrap {
+    overflow-x: auto;
+    padding: 20px 4px 30px;
+    margin-bottom: 8px;
+  }
+  .ruler-inner { position: relative; height: 90px; }
+  .bar {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    height: 22px;
+    background: #2563eb;
+    border-radius: 4px 4px 0 0;
+  }
+  .ruler-line {
+    position: absolute;
+    top: 44px;
+    left: 0;
+    height: 3px;
+    background: #334155;
+  }
+  .tick {
+    position: absolute;
+    top: 44px;
+    width: 2px;
+    background: #334155;
+  }
+  .tick.major { height: 14px; }
+  .tick.minor { height: 8px; top: 44px; background: #94a3b8; }
+  .tick-label {
+    position: absolute;
+    top: 60px;
+    font-size: 11px;
+    color: #475569;
+    transform: translateX(-50%);
+  }
+
+  .question-note { text-align: center; font-size: 14px; color: #334155; font-weight: 600; margin-bottom: 14px; }
+  .choices { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .choice {
+    padding: 12px 4px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .choice:hover { border-color: #93c5fd; }
+  .choice.correct { border-color: #16a34a; background: #dcfce7; }
+  .choice.wrong { border-color: #dc2626; background: #fee2e2; }
+  .choice:disabled { cursor: default; }
+
+  button.primary {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+  }
+  button.primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+  .result { font-size: 16px; line-height: 1.7; text-align: center; }
+  .result .score { font-size: 32px; font-weight: 700; color: #2563eb; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>長さくらべ</h1>
+    <div class="sub">ぼうは、ものさしの何cmのところまであるかな？</div>
+    <div class="progress" id="progress"></div>
+
+    <div class="ruler-wrap">
+      <div class="ruler-inner" id="rulerInner"></div>
+    </div>
+
+    <div class="question-note">正しい長さを選んでね</div>
+    <div class="choices" id="choices"></div>
+    <button class="primary" id="nextBtn" disabled>次へ</button>
+  </div>
+
+<script>
+  const PX_PER_CM = 24;
+  const MAX_CM = 15;
+  const TOTAL_QUESTIONS = 6;
+
+  const rulerInner = document.getElementById("rulerInner");
+  const progress = document.getElementById("progress");
+  const choicesEl = document.getElementById("choices");
+  const nextBtn = document.getElementById("nextBtn");
+
+  let index = 0;
+  let score = 0;
+  let currentLength = 0;
+
+  function buildRuler(length) {
+    rulerInner.innerHTML = "";
+    rulerInner.style.width = `${MAX_CM * PX_PER_CM + 20}px`;
+
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.width = `${length * PX_PER_CM}px`;
+    rulerInner.appendChild(bar);
+
+    const line = document.createElement("div");
+    line.className = "ruler-line";
+    line.style.width = `${MAX_CM * PX_PER_CM}px`;
+    rulerInner.appendChild(line);
+
+    for (let cm = 0; cm <= MAX_CM; cm++) {
+      const tick = document.createElement("div");
+      tick.className = "tick major";
+      tick.style.left = `${cm * PX_PER_CM}px`;
+      rulerInner.appendChild(tick);
+
+      const label = document.createElement("div");
+      label.className = "tick-label";
+      label.style.left = `${cm * PX_PER_CM}px`;
+      label.textContent = cm;
+      rulerInner.appendChild(label);
+
+      if (cm < MAX_CM) {
+        for (let mm = 1; mm < 2; mm++) {
+          // 中間目盛り（0.5cmごと）を1本だけ入れて見やすくする
+          const minor = document.createElement("div");
+          minor.className = "tick minor";
+          minor.style.left = `${(cm + 0.5) * PX_PER_CM}px`;
+          rulerInner.appendChild(minor);
+        }
+      }
+    }
+  }
+
+  function makeChoices(correct) {
+    const options = new Set([correct]);
+    while (options.size < 4) {
+      const delta = Math.floor(Math.random() * 5) - 2;
+      const candidate = correct + delta;
+      if (candidate >= 1 && candidate <= MAX_CM) options.add(candidate);
+    }
+    return shuffle(Array.from(options));
+  }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function nextQuestion() {
+    currentLength = Math.floor(Math.random() * (MAX_CM - 2)) + 2; // 2〜MAX_CM
+    buildRuler(currentLength);
+    progress.textContent = `${index + 1} / ${TOTAL_QUESTIONS} 問`;
+    nextBtn.disabled = true;
+
+    choicesEl.innerHTML = "";
+    makeChoices(currentLength).forEach((value) => {
+      const btn = document.createElement("button");
+      btn.className = "choice";
+      btn.textContent = `${value} cm`;
+      btn.addEventListener("click", () => selectChoice(value, btn));
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function selectChoice(value, btnEl) {
+    document.querySelectorAll(".choice").forEach((btn) => {
+      btn.disabled = true;
+      if (Number(btn.textContent) === currentLength) btn.classList.add("correct");
+    });
+    if (value !== currentLength) btnEl.classList.add("wrong");
+    else score += 1;
+    nextBtn.disabled = false;
+  }
+
+  function showResult() {
+    document.querySelector(".ruler-wrap").style.display = "none";
+    document.querySelector(".question-note").style.display = "none";
+    choicesEl.style.display = "none";
+    nextBtn.style.display = "none";
+
+    const result = document.createElement("div");
+    result.className = "result";
+    result.innerHTML = `
+      <div>けっか</div>
+      <div class="score">${score} / ${TOTAL_QUESTIONS}</div>
+      <button class="primary" id="retryBtn" style="display:block;">もう一度挑戦する</button>
+    `;
+    document.querySelector(".card").appendChild(result);
+    document.getElementById("retryBtn").addEventListener("click", () => location.reload());
+  }
+
+  nextBtn.addEventListener("click", () => {
+    index += 1;
+    if (index >= TOTAL_QUESTIONS) {
+      showResult();
+    } else {
+      nextQuestion();
+    }
+  });
+
+  nextQuestion();
+</script>
+</body>
+</html>

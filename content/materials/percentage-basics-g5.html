@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>割合を図で見よう</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 26px 24px;
+  }
+  h1 { font-size: 19px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; text-align: center; }
+
+  .row-label { display: flex; justify-content: space-between; font-size: 14px; color: #475569; margin-bottom: 6px; }
+  .row-label strong { color: #1f2937; }
+  input[type="range"] { width: 100%; margin-bottom: 18px; }
+
+  .bar-track {
+    width: 100%;
+    height: 40px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #cbd5e1;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    background: #2563eb;
+    transition: width 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+  }
+  .bar-fill span { color: white; font-size: 13px; font-weight: 700; }
+
+  .equation {
+    text-align: center;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    color: #334155;
+    line-height: 1.8;
+  }
+  .equation .big { font-size: 22px; font-weight: 700; color: #2563eb; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>割合を図で見よう</h1>
+    <div class="sub">「くらべる量」と「もとにする量」を動かしてみよう</div>
+
+    <div class="row-label"><span>もとにする量</span><strong id="baseValue">100</strong></div>
+    <input type="range" id="baseSlider" min="10" max="200" step="10" value="100" />
+
+    <div class="row-label"><span>くらべる量</span><strong id="compareValue">30</strong></div>
+    <input type="range" id="compareSlider" min="0" max="200" step="10" value="30" />
+
+    <div class="bar-track">
+      <div class="bar-fill" id="barFill"><span id="barLabel"></span></div>
+    </div>
+
+    <div class="equation">
+      割合 ＝ くらべる量 ÷ もとにする量<br />
+      <span id="eqNumbers"></span> ＝ <span class="big" id="eqPercent"></span>
+    </div>
+  </div>
+
+<script>
+  const baseSlider = document.getElementById("baseSlider");
+  const compareSlider = document.getElementById("compareSlider");
+  const baseValue = document.getElementById("baseValue");
+  const compareValue = document.getElementById("compareValue");
+  const barFill = document.getElementById("barFill");
+  const barLabel = document.getElementById("barLabel");
+  const eqNumbers = document.getElementById("eqNumbers");
+  const eqPercent = document.getElementById("eqPercent");
+
+  function render() {
+    const base = Number(baseSlider.value);
+    let compare = Number(compareSlider.value);
+    compareSlider.max = base * 2;
+    if (compare > Number(compareSlider.max)) {
+      compare = Number(compareSlider.max);
+      compareSlider.value = compare;
+    }
+
+    baseValue.textContent = base;
+    compareValue.textContent = compare;
+
+    const ratio = base > 0 ? compare / base : 0;
+    const percent = Math.round(ratio * 1000) / 10;
+    const widthPercent = Math.min(100, ratio * 100);
+
+    barFill.style.width = `${widthPercent}%`;
+    barLabel.textContent = widthPercent > 12 ? `${percent}%` : "";
+
+    eqNumbers.textContent = `${compare} ÷ ${base}`;
+    eqPercent.textContent = `${percent}%`;
+  }
+
+  baseSlider.addEventListener("input", render);
+  compareSlider.addEventListener("input", render);
+  render();
+</script>
+</body>
+</html>

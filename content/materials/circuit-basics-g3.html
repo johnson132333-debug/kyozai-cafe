@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>電気の通り道</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 440px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 26px 20px;
+    text-align: center;
+  }
+  h1 { font-size: 19px; margin: 0 0 4px; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 8px; }
+  .progress { font-size: 12px; color: #94a3b8; text-align: right; margin-bottom: 10px; }
+
+  svg { width: 100%; height: 180px; margin-bottom: 16px; }
+
+  .choices { display: flex; gap: 10px; margin-bottom: 8px; }
+  .choices button {
+    flex: 1;
+    padding: 16px;
+    font-size: 17px;
+    font-weight: 700;
+    border-radius: 14px;
+    border: 3px solid #e2e8f0;
+    background: #f8fafc;
+    cursor: pointer;
+  }
+  .choices button:disabled { cursor: default; }
+  .choices button.correct { border-color: #16a34a; background: #dcfce7; }
+  .choices button.wrong { border-color: #dc2626; background: #fee2e2; }
+
+  .feedback { min-height: 22px; font-weight: 700; margin-bottom: 10px; }
+  .feedback.good { color: #16a34a; }
+  .feedback.bad { color: #dc2626; }
+
+  button.primary {
+    width: 100%;
+    margin-top: 8px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+  }
+  button.primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+  .result { font-size: 16px; line-height: 1.7; }
+  .result .score { font-size: 32px; font-weight: 700; color: #2563eb; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>電気の通り道</h1>
+    <div class="sub">この つなぎ方で、豆電球はつくかな？</div>
+    <div class="progress" id="progress"></div>
+
+    <div id="quizArea">
+      <svg id="circuitSvg" viewBox="0 0 300 180"></svg>
+      <div class="choices" id="choices">
+        <button id="onBtn">🔆 つく</button>
+        <button id="offBtn">⚫ つかない</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <button class="primary" id="nextBtn" disabled>次へ</button>
+    </div>
+
+    <div id="resultArea" class="result" style="display:none;"></div>
+  </div>
+
+<script>
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("circuitSvg");
+  const progress = document.getElementById("progress");
+  const feedback = document.getElementById("feedback");
+  const onBtn = document.getElementById("onBtn");
+  const offBtn = document.getElementById("offBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const quizArea = document.getElementById("quizArea");
+  const resultArea = document.getElementById("resultArea");
+
+  const TOTAL_QUESTIONS = 6;
+  let index = 0;
+  let score = 0;
+  let currentLights = false;
+
+  const patterns = [
+    { gapTop: false, gapBottom: false }, // 完全な回路 → つく
+    { gapTop: true, gapBottom: false },  // 上の線が切れている → つかない
+    { gapTop: false, gapBottom: true },  // 下の線が切れている → つかない
+    { gapTop: false, gapBottom: false },
+    { gapTop: true, gapBottom: true },
+    { gapTop: false, gapBottom: false },
+  ];
+
+  function drawWire(x1, y1, x2, y2, hasGap) {
+    if (!hasGap) {
+      const line = document.createElementNS(NS, "line");
+      line.setAttribute("x1", x1);
+      line.setAttribute("y1", y1);
+      line.setAttribute("x2", x2);
+      line.setAttribute("y2", y2);
+      line.setAttribute("stroke", "#334155");
+      line.setAttribute("stroke-width", "4");
+      svg.appendChild(line);
+    } else {
+      const mid1 = x1 + (x2 - x1) * 0.4;
+      const mid2 = x1 + (x2 - x1) * 0.6;
+      [
+        [x1, mid1],
+        [mid2, x2],
+      ].forEach(([sx, ex]) => {
+        const line = document.createElementNS(NS, "line");
+        line.setAttribute("x1", sx);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", ex);
+        line.setAttribute("y2", y2);
+        line.setAttribute("stroke", "#dc2626");
+        line.setAttribute("stroke-width", "4");
+        line.setAttribute("stroke-dasharray", "6 4");
+        svg.appendChild(line);
+      });
+    }
+  }
+
+  function drawCircuit(pattern, lit) {
+    svg.innerHTML = "";
+
+    // 電池（左）
+    const battery = document.createElementNS(NS, "rect");
+    battery.setAttribute("x", 30);
+    battery.setAttribute("y", 65);
+    battery.setAttribute("width", 40);
+    battery.setAttribute("height", 50);
+    battery.setAttribute("rx", 6);
+    battery.setAttribute("fill", "#334155");
+    svg.appendChild(battery);
+
+    const plus = document.createElementNS(NS, "text");
+    plus.setAttribute("x", 50);
+    plus.setAttribute("y", 60);
+    plus.setAttribute("text-anchor", "middle");
+    plus.setAttribute("font-size", "18");
+    plus.setAttribute("fill", "#334155");
+    plus.textContent = "+";
+    svg.appendChild(plus);
+
+    const minus = document.createElementNS(NS, "text");
+    minus.setAttribute("x", 50);
+    minus.setAttribute("y", 135);
+    minus.setAttribute("text-anchor", "middle");
+    minus.setAttribute("font-size", "18");
+    minus.setAttribute("fill", "#334155");
+    minus.textContent = "−";
+    svg.appendChild(minus);
+
+    // 豆電球（右）
+    const bulbColor = lit ? "#fde047" : "#e2e8f0";
+    const bulb = document.createElementNS(NS, "circle");
+    bulb.setAttribute("cx", 240);
+    bulb.setAttribute("cy", 90);
+    bulb.setAttribute("r", 26);
+    bulb.setAttribute("fill", bulbColor);
+    bulb.setAttribute("stroke", "#334155");
+    bulb.setAttribute("stroke-width", "3");
+    svg.appendChild(bulb);
+
+    if (lit) {
+      const glow = document.createElementNS(NS, "circle");
+      glow.setAttribute("cx", 240);
+      glow.setAttribute("cy", 90);
+      glow.setAttribute("r", 36);
+      glow.setAttribute("fill", "none");
+      glow.setAttribute("stroke", "#fde047");
+      glow.setAttribute("stroke-width", "4");
+      glow.setAttribute("opacity", "0.6");
+      svg.appendChild(glow);
+    }
+
+    // 上の線・下の線
+    drawWire(50, 65, 240, 64, pattern.gapTop);
+    drawWire(50, 135, 240, 116, pattern.gapBottom);
+  }
+
+  function nextQuestion() {
+    const pattern = patterns[index];
+    currentLights = !pattern.gapTop && !pattern.gapBottom;
+    drawCircuit(pattern, false);
+    progress.textContent = `${index + 1} / ${TOTAL_QUESTIONS} 問`;
+    feedback.textContent = "";
+    onBtn.disabled = false;
+    offBtn.disabled = false;
+    onBtn.className = "";
+    offBtn.className = "";
+    nextBtn.disabled = true;
+  }
+
+  function answer(choseLights) {
+    onBtn.disabled = true;
+    offBtn.disabled = true;
+    const correctBtn = currentLights ? onBtn : offBtn;
+    correctBtn.classList.add("correct");
+    if (choseLights !== currentLights) {
+      const wrongBtn = choseLights ? onBtn : offBtn;
+      wrongBtn.classList.add("wrong");
+    } else {
+      score += 1;
+    }
+    feedback.textContent = currentLights ? "○ 豆電球はつきます" : "✕ 豆電球はつきません";
+    feedback.className = "feedback " + (currentLights ? "good" : "bad");
+    drawCircuit(patterns[index], currentLights);
+    nextBtn.disabled = false;
+  }
+
+  onBtn.addEventListener("click", () => answer(true));
+  offBtn.addEventListener("click", () => answer(false));
+
+  function showResult() {
+    quizArea.style.display = "none";
+    resultArea.style.display = "block";
+    resultArea.innerHTML = `
+      <div>けっか</div>
+      <div class="score">${score} / ${TOTAL_QUESTIONS}</div>
+      <button class="primary" id="retryBtn" style="display:block;">もう一度挑戦する</button>
+    `;
+    document.getElementById("retryBtn").addEventListener("click", () => location.reload());
+  }
+
+  nextBtn.addEventListener("click", () => {
+    index += 1;
+    if (index >= TOTAL_QUESTIONS) {
+      showResult();
+    } else {
+      nextQuestion();
+    }
+  });
+
+  nextQuestion();
+</script>
+</body>
+</html>

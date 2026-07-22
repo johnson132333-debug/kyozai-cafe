@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>たん生日と月の単語カード</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card-wrap { width: 100%; max-width: 420px; text-align: center; }
+  .top-info { display: flex; justify-content: space-between; font-size: 13px; color: #64748b; margin-bottom: 10px; }
+  .flashcard {
+    height: 220px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1e293b;
+    cursor: pointer;
+    user-select: none;
+    padding: 16px;
+    text-align: center;
+  }
+  .flashcard.back { color: #2563eb; font-size: 24px; }
+  .hint { font-size: 12px; color: #94a3b8; margin-top: 10px; margin-bottom: 20px; }
+  .actions { display: flex; gap: 10px; }
+  button {
+    flex: 1;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .know-btn { background: #16a34a; color: white; }
+  .again-btn { background: #f59e0b; color: white; }
+  .finished {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 32px 24px;
+  }
+  .finished .score { font-size: 32px; font-weight: 700; color: #2563eb; margin-bottom: 16px; }
+  .restart-btn { background: #2563eb; color: white; width: 100%; padding: 12px; }
+</style>
+</head>
+<body>
+  <div class="card-wrap">
+    <div class="top-info">
+      <span id="progress"></span>
+      <span id="knownCount">覚えた: 0</span>
+    </div>
+
+    <div id="game">
+      <div class="flashcard" id="flashcard"></div>
+      <div class="hint">カードをクリックすると意味が表示されます</div>
+      <div class="actions">
+        <button class="again-btn" id="againBtn">もう一度</button>
+        <button class="know-btn" id="knowBtn">わかった</button>
+      </div>
+    </div>
+
+    <div class="finished" id="finished" style="display:none;">
+      <div>お疲れさまでした！</div>
+      <div class="score" id="finalScore"></div>
+      <button class="restart-btn" id="restartBtn">最初からもう一度</button>
+    </div>
+  </div>
+
+<script>
+  // 「たん生日・月」の単元向けの単語
+  const words = [
+    { word: "January", meaning: "1月" },
+    { word: "May", meaning: "5月" },
+    { word: "July", meaning: "7月" },
+    { word: "December", meaning: "12月" },
+    { word: "birthday", meaning: "たん生日" },
+    { word: "month", meaning: "月（つき）" },
+    { word: "when", meaning: "いつ" },
+    { word: "date", meaning: "日にち" },
+    { word: "cake", meaning: "ケーキ" },
+    { word: "present", meaning: "プレゼント" },
+  ];
+
+  let deck = [...words];
+  let index = 0;
+  let known = 0;
+  let showingBack = false;
+
+  const flashcard = document.getElementById("flashcard");
+  const progress = document.getElementById("progress");
+  const knownCount = document.getElementById("knownCount");
+  const gameEl = document.getElementById("game");
+  const finishedEl = document.getElementById("finished");
+  const finalScore = document.getElementById("finalScore");
+
+  function renderCard() {
+    if (index >= deck.length) {
+      gameEl.style.display = "none";
+      finishedEl.style.display = "block";
+      finalScore.textContent = `${known} / ${words.length} 語 覚えた`;
+      return;
+    }
+    showingBack = false;
+    flashcard.className = "flashcard";
+    flashcard.textContent = deck[index].word;
+    progress.textContent = `${index + 1} / ${deck.length} 枚`;
+    knownCount.textContent = `覚えた: ${known}`;
+  }
+
+  flashcard.addEventListener("click", () => {
+    showingBack = !showingBack;
+    const current = deck[index];
+    flashcard.textContent = showingBack ? current.meaning : current.word;
+    flashcard.className = showingBack ? "flashcard back" : "flashcard";
+  });
+
+  document.getElementById("knowBtn").addEventListener("click", () => {
+    known += 1;
+    index += 1;
+    renderCard();
+  });
+
+  document.getElementById("againBtn").addEventListener("click", () => {
+    const [current] = deck.splice(index, 1);
+    deck.push(current);
+    renderCard();
+  });
+
+  document.getElementById("restartBtn").addEventListener("click", () => {
+    deck = [...words];
+    index = 0;
+    known = 0;
+    gameEl.style.display = "block";
+    finishedEl.style.display = "none";
+    renderCard();
+  });
+
+  renderCard();
+</script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>天気と気温</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 26px 20px;
+  }
+  h1 { font-size: 19px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; text-align: center; }
+
+  .weather-buttons { display: flex; gap: 8px; margin-bottom: 18px; }
+  .weather-buttons button {
+    flex: 1;
+    padding: 12px 4px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 12px;
+    border: 2px solid #cbd5e1;
+    background: #f8fafc;
+    cursor: pointer;
+  }
+  .weather-buttons button.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+
+  svg { width: 100%; height: 220px; }
+  .note { margin-top: 10px; font-size: 13px; color: #64748b; text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>天気と気温</h1>
+    <div class="sub">天気をえらぶと、1日の気温の変わり方がわかるよ</div>
+
+    <div class="weather-buttons" id="weatherButtons">
+      <button data-w="sunny" class="active">☀️ 晴れ</button>
+      <button data-w="cloudy">☁️ くもり</button>
+      <button data-w="rainy">🌧️ 雨</button>
+    </div>
+
+    <svg id="graph" viewBox="0 0 320 220"></svg>
+    <div class="note" id="note"></div>
+  </div>
+
+<script>
+  const NS = "http://www.w3.org/2000/svg";
+  const graph = document.getElementById("graph");
+  const note = document.getElementById("note");
+  const buttons = document.querySelectorAll("#weatherButtons button");
+
+  const hours = [6, 8, 10, 12, 14, 16, 18];
+  const data = {
+    sunny: { temps: [18, 21, 26, 30, 32, 29, 24], color: "#f59e0b", note: "晴れの日は、朝と昼で気温の差が大きくなります。太陽の熱で午後2時ごろが一番高くなります。" },
+    cloudy: { temps: [19, 20, 22, 24, 25, 23, 21], color: "#64748b", note: "くもりの日は、雲が太陽の熱をさえぎるため、晴れの日ほど気温が上がりません。" },
+    rainy: { temps: [19, 19, 20, 20, 20, 19, 19], color: "#2563eb", note: "雨の日は、1日を通して気温の変化が小さく、ほぼ一定のままです。" },
+  };
+
+  const W = 320, H = 220;
+  const padL = 34, padR = 10, padT = 14, padB = 30;
+  const minTemp = 10, maxTemp = 35;
+
+  function xForIndex(i) {
+    return padL + (i / (hours.length - 1)) * (W - padL - padR);
+  }
+  function yForTemp(t) {
+    return H - padB - ((t - minTemp) / (maxTemp - minTemp)) * (H - padT - padB);
+  }
+
+  function render(weather) {
+    const { temps, color, note: noteText } = data[weather];
+    graph.innerHTML = "";
+
+    // 軸
+    const axisY = document.createElementNS(NS, "line");
+    axisY.setAttribute("x1", padL);
+    axisY.setAttribute("y1", padT);
+    axisY.setAttribute("x2", padL);
+    axisY.setAttribute("y2", H - padB);
+    axisY.setAttribute("stroke", "#cbd5e1");
+    axisY.setAttribute("stroke-width", "2");
+    graph.appendChild(axisY);
+
+    const axisX = document.createElementNS(NS, "line");
+    axisX.setAttribute("x1", padL);
+    axisX.setAttribute("y1", H - padB);
+    axisX.setAttribute("x2", W - padR);
+    axisX.setAttribute("y2", H - padB);
+    axisX.setAttribute("stroke", "#cbd5e1");
+    axisX.setAttribute("stroke-width", "2");
+    graph.appendChild(axisX);
+
+    [10, 20, 30].forEach((t) => {
+      const y = yForTemp(t);
+      const label = document.createElementNS(NS, "text");
+      label.setAttribute("x", padL - 6);
+      label.setAttribute("y", y + 4);
+      label.setAttribute("text-anchor", "end");
+      label.setAttribute("font-size", "10");
+      label.setAttribute("fill", "#94a3b8");
+      label.textContent = t;
+      graph.appendChild(label);
+    });
+
+    hours.forEach((h, i) => {
+      const label = document.createElementNS(NS, "text");
+      label.setAttribute("x", xForIndex(i));
+      label.setAttribute("y", H - padB + 16);
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("font-size", "10");
+      label.setAttribute("fill", "#94a3b8");
+      label.textContent = `${h}時`;
+      graph.appendChild(label);
+    });
+
+    const points = temps.map((t, i) => `${xForIndex(i)},${yForTemp(t)}`).join(" ");
+    const polyline = document.createElementNS(NS, "polyline");
+    polyline.setAttribute("points", points);
+    polyline.setAttribute("fill", "none");
+    polyline.setAttribute("stroke", color);
+    polyline.setAttribute("stroke-width", "3");
+    graph.appendChild(polyline);
+
+    temps.forEach((t, i) => {
+      const dot = document.createElementNS(NS, "circle");
+      dot.setAttribute("cx", xForIndex(i));
+      dot.setAttribute("cy", yForTemp(t));
+      dot.setAttribute("r", "4");
+      dot.setAttribute("fill", color);
+      graph.appendChild(dot);
+
+      const label = document.createElementNS(NS, "text");
+      label.setAttribute("x", xForIndex(i));
+      label.setAttribute("y", yForTemp(t) - 8);
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("font-size", "10");
+      label.setAttribute("fill", "#334155");
+      label.textContent = `${t}℃`;
+      graph.appendChild(label);
+    });
+
+    note.textContent = noteText;
+  }
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      buttons.forEach((b) => b.classList.toggle("active", b === btn));
+      render(btn.dataset.w);
+    });
+  });
+
+  render("sunny");
+</script>
+</body>
+</html>

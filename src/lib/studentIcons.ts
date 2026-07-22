@@ -23,6 +23,16 @@ export const STUDENT_ICONS: Record<string, string> = {
   "eye-tracking": "👀",
   "number-search": "🔢",
   "shape-match": "🔺",
+  "vocab-birthday-months-g5": "🎂",
+  "vocab-town-directions-g5": "🏫",
+  "vocab-summer-vacation-g6": "🏖️",
+  "vocab-future-dreams-g6": "🌟",
+  "length-basics-g2": "📏",
+  "division-remainder-g3": "🔵",
+  "percentage-basics-g5": "📊",
+  "plant-growth-g3": "🌻",
+  "circuit-basics-g3": "💡",
+  "weather-temperature-g4": "🌤️",
 };
 
 export const DEFAULT_STUDENT_ICON = "⭐";
