@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>見えるスケジュールボード</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .wrap { width: 100%; max-width: 480px; }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 16px; text-align: center; }
+
+  .setup {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .setup p { font-size: 12px; color: #94a3b8; margin: 0 0 8px; }
+  textarea {
+    width: 100%;
+    min-height: 130px;
+    border-radius: 12px;
+    border: 2px solid #cbd5e1;
+    padding: 10px;
+    font-size: 15px;
+    resize: vertical;
+    margin-bottom: 10px;
+    font-family: inherit;
+  }
+  .setup button {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 12px;
+    background: #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: #16a34a; width: 0%; transition: width 0.3s; }
+  .progress-label { font-size: 13px; color: #475569; white-space: nowrap; }
+
+  .board { display: flex; flex-direction: column; gap: 10px; }
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #ffffff;
+    border: 3px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .item .icon { font-size: 34px; line-height: 1; }
+  .item .label { font-size: 18px; font-weight: 600; flex: 1; }
+  .item .check {
+    font-size: 22px;
+    color: #cbd5e1;
+  }
+  .item.current {
+    border-color: #2563eb;
+    background: #eff6ff;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  }
+  .item.current .label { color: #1d4ed8; }
+  .item.done {
+    opacity: 0.5;
+  }
+  .item.done .label { text-decoration: line-through; }
+  .item.done .check { color: #16a34a; }
+  .now-badge {
+    display: inline-block;
+    background: #2563eb;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-right: 8px;
+  }
+  .all-done {
+    text-align: center;
+    padding: 24px;
+    background: #dcfce7;
+    border-radius: 16px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #15803d;
+  }
+  .reset-btn {
+    margin-top: 14px;
+    width: 100%;
+    padding: 10px;
+    font-size: 13px;
+    border-radius: 10px;
+    border: none;
+    background: #e2e8f0;
+    color: #334155;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>見えるスケジュールボード</h1>
+    <div class="sub">終わったら、カードをタップしてね</div>
+
+    <div class="setup">
+      <p>1行に1つずつ「絵文字 活動名」の形で入力してください</p>
+      <textarea id="scheduleInput">🎒 朝の準備
+📖 朝の会
+✏️ 1時間目
+✏️ 2時間目
+🍙 きゅうしょく
+🧹 そうじ
+🏃 休み時間
+🎨 図工
+🎒 帰りの会</textarea>
+      <button id="startBtn">このスケジュールで始める</button>
+    </div>
+
+    <div id="progressRow" class="progress-row" style="display:none;">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel"></div>
+    </div>
+
+    <div class="board" id="board"></div>
+    <button class="reset-btn" id="resetBtn" style="display:none;">最初からやり直す</button>
+  </div>
+
+<script>
+  const scheduleInput = document.getElementById("scheduleInput");
+  const startBtn = document.getElementById("startBtn");
+  const board = document.getElementById("board");
+  const progressRow = document.getElementById("progressRow");
+  const progressFill = document.getElementById("progressFill");
+  const progressLabel = document.getElementById("progressLabel");
+  const resetBtn = document.getElementById("resetBtn");
+
+  let items = [];
+
+  function parseSchedule() {
+    return scheduleInput.value
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .map((line) => {
+        const parts = line.split(/\s+/);
+        const icon = parts[0];
+        const label = parts.slice(1).join(" ") || icon;
+        return { icon, label, done: false };
+      });
+  }
+
+  function findCurrentIndex() {
+    return items.findIndex((item) => !item.done);
+  }
+
+  function render() {
+    board.innerHTML = "";
+    const currentIndex = findCurrentIndex();
+    const doneCount = items.filter((i) => i.done).length;
+
+    progressRow.style.display = items.length > 0 ? "flex" : "none";
+    resetBtn.style.display = items.length > 0 ? "block" : "none";
+    progressFill.style.width = items.length > 0 ? `${(doneCount / items.length) * 100}%` : "0%";
+    progressLabel.textContent = `${doneCount} / ${items.length}`;
+
+    if (currentIndex === -1 && items.length > 0) {
+      const allDone = document.createElement("div");
+      allDone.className = "all-done";
+      allDone.textContent = "🎉 ぜんぶ おわったよ！";
+      board.appendChild(allDone);
+      return;
+    }
+
+    items.forEach((item, i) => {
+      const el = document.createElement("div");
+      el.className = "item" + (item.done ? " done" : i === currentIndex ? " current" : "");
+      el.innerHTML = `
+        <div class="icon">${item.icon}</div>
+        <div class="label">${i === currentIndex ? '<span class="now-badge">いま</span>' : ""}${item.label}</div>
+        <div class="check">${item.done ? "✔" : "○"}</div>
+      `;
+      el.addEventListener("click", () => {
+        item.done = !item.done;
+        render();
+      });
+      board.appendChild(el);
+    });
+  }
+
+  startBtn.addEventListener("click", () => {
+    items = parseSchedule();
+    render();
+  });
+
+  resetBtn.addEventListener("click", () => {
+    items.forEach((item) => (item.done = false));
+    render();
+  });
+
+  startBtn.click();
+</script>
+</body>
+</html>

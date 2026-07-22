@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>コミュニケーションボード</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+  }
+  .wrap { width: 100%; max-width: 480px; }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 16px; text-align: center; }
+
+  .top-row { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+  .sound-toggle {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 2px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+  }
+  .sound-toggle.on { border-color: #2563eb; color: #2563eb; }
+
+  .selected {
+    min-height: 90px;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 14px;
+  }
+  .selected .icon { font-size: 44px; }
+  .selected .text { font-size: 20px; font-weight: 700; color: #334155; }
+  .selected .placeholder { font-size: 14px; color: #94a3b8; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .grid button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 6px;
+    border-radius: 16px;
+    border: 3px solid #e2e8f0;
+    background: #ffffff;
+    cursor: pointer;
+  }
+  .grid button:active { border-color: #2563eb; background: #eff6ff; }
+  .grid button .icon { font-size: 36px; }
+  .grid button .label { font-size: 13px; font-weight: 600; color: #475569; text-align: center; }
+  .no-speech-note {
+    margin-top: 14px;
+    font-size: 11px;
+    color: #cbd5e1;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>コミュニケーションボード</h1>
+    <div class="sub">つたえたいカードをタップしてね</div>
+
+    <div class="top-row">
+      <button class="sound-toggle on" id="soundToggle">🔊 音声：オン</button>
+    </div>
+
+    <div class="selected" id="selected">
+      <span class="placeholder">カードをタップしてください</span>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <div class="no-speech-note" id="noSpeechNote" style="display:none;">
+      ※ このブラウザは音声読み上げに対応していません（表示のみ行います）
+    </div>
+  </div>
+
+<script>
+  // ここを書き換えれば、カードの内容を自由にカスタマイズできます
+  const cards = [
+    { icon: "🚻", label: "トイレ" },
+    { icon: "💧", label: "水がほしい" },
+    { icon: "🛋️", label: "休憩したい" },
+    { icon: "🙋", label: "手伝って" },
+    { icon: "🤕", label: "痛い" },
+    { icon: "✅", label: "もう終わり" },
+    { icon: "➕", label: "もっとほしい" },
+    { icon: "🆘", label: "たすけて" },
+    { icon: "🤫", label: "静かにしたい" },
+    { icon: "👉", label: "これがほしい" },
+    { icon: "⭕", label: "はい" },
+    { icon: "❌", label: "いいえ" },
+  ];
+
+  const grid = document.getElementById("grid");
+  const selected = document.getElementById("selected");
+  const soundToggle = document.getElementById("soundToggle");
+  const noSpeechNote = document.getElementById("noSpeechNote");
+
+  let soundOn = true;
+  const speechSupported = "speechSynthesis" in window;
+  if (!speechSupported) {
+    noSpeechNote.style.display = "block";
+    soundToggle.style.display = "none";
+  }
+
+  cards.forEach((card) => {
+    const btn = document.createElement("button");
+    btn.innerHTML = `<span class="icon">${card.icon}</span><span class="label">${card.label}</span>`;
+    btn.addEventListener("click", () => selectCard(card));
+    grid.appendChild(btn);
+  });
+
+  function selectCard(card) {
+    selected.innerHTML = `<span class="icon">${card.icon}</span><span class="text">${card.label}</span>`;
+    if (soundOn && speechSupported) {
+      try {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(card.label);
+        utter.lang = "ja-JP";
+        utter.rate = 0.95;
+        window.speechSynthesis.speak(utter);
+      } catch (e) {
+        // 読み上げに失敗しても表示は継続する
+      }
+    }
+  }
+
+  soundToggle.addEventListener("click", () => {
+    soundOn = !soundOn;
+    soundToggle.textContent = soundOn ? "🔊 音声：オン" : "🔇 音声：オフ";
+    soundToggle.classList.toggle("on", soundOn);
+  });
+</script>
+</body>
+</html>

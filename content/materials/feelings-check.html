@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>気持ちチェックカード</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+  }
+  .wrap { width: 100%; max-width: 460px; }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; text-align: center; }
+
+  .selected {
+    min-height: 90px;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 14px;
+  }
+  .selected .icon { font-size: 44px; }
+  .selected .text { font-size: 18px; font-weight: 700; color: #334155; }
+  .selected .placeholder { font-size: 14px; color: #94a3b8; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .grid button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 6px;
+    border-radius: 16px;
+    border: 3px solid #e2e8f0;
+    background: #ffffff;
+    cursor: pointer;
+  }
+  .grid button.active { border-color: #2563eb; background: #eff6ff; }
+  .grid button .icon { font-size: 34px; }
+  .grid button .label { font-size: 13px; font-weight: 600; color: #475569; }
+
+  .log-title { font-size: 13px; color: #64748b; margin-bottom: 8px; }
+  .log {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 10px 14px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    max-height: 160px;
+    overflow-y: auto;
+    font-size: 13px;
+    color: #475569;
+  }
+  .log-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9; }
+  .log-item:last-child { border-bottom: none; }
+  .log-empty { color: #cbd5e1; text-align: center; padding: 10px 0; }
+  .clear-btn {
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+    font-size: 12px;
+    border-radius: 10px;
+    border: none;
+    background: #e2e8f0;
+    color: #334155;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>気持ちチェックカード</h1>
+    <div class="sub">いまの気持ちに近いものをタップしてね</div>
+
+    <div class="selected" id="selected">
+      <span class="placeholder">まだ選んでいません</span>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="log-title">きろく</div>
+    <div class="log" id="log"><div class="log-empty">まだ記録がありません</div></div>
+    <button class="clear-btn" id="clearBtn">きろくを消す</button>
+  </div>
+
+<script>
+  const feelings = [
+    { icon: "😄", label: "うれしい" },
+    { icon: "🙂", label: "ふつう" },
+    { icon: "😢", label: "かなしい" },
+    { icon: "😠", label: "おこってる" },
+    { icon: "😰", label: "ふあん" },
+    { icon: "😴", label: "つかれた" },
+    { icon: "😖", label: "こまってる" },
+    { icon: "🤗", label: "げんき" },
+    { icon: "😶", label: "わからない" },
+  ];
+
+  const grid = document.getElementById("grid");
+  const selected = document.getElementById("selected");
+  const log = document.getElementById("log");
+  const clearBtn = document.getElementById("clearBtn");
+
+  const history = [];
+
+  feelings.forEach((feeling, i) => {
+    const btn = document.createElement("button");
+    btn.innerHTML = `<span class="icon">${feeling.icon}</span><span class="label">${feeling.label}</span>`;
+    btn.addEventListener("click", () => selectFeeling(i, btn));
+    grid.appendChild(btn);
+  });
+
+  function selectFeeling(index, btnEl) {
+    document.querySelectorAll(".grid button").forEach((b) => b.classList.remove("active"));
+    btnEl.classList.add("active");
+
+    const feeling = feelings[index];
+    selected.innerHTML = `<span class="icon">${feeling.icon}</span><span class="text">いまの気持ち：${feeling.label}</span>`;
+
+    const now = new Date();
+    const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    history.unshift({ time, feeling });
+    renderLog();
+  }
+
+  function renderLog() {
+    if (history.length === 0) {
+      log.innerHTML = '<div class="log-empty">まだ記録がありません</div>';
+      return;
+    }
+    log.innerHTML = history
+      .map((h) => `<div class="log-item"><span>${h.feeling.icon} ${h.feeling.label}</span><span>${h.time}</span></div>`)
+      .join("");
+  }
+
+  clearBtn.addEventListener("click", () => {
+    history.length = 0;
+    renderLog();
+  });
+</script>
+</body>
+</html>

@@ -14,7 +14,7 @@ export type Material = {
 };
 
 // 教科の表示順（学校でよくある並び順）。ここにない教科は末尾に追加されます。
-const SUBJECT_ORDER = ["算数", "国語", "社会", "理科", "英語", "学級経営"];
+const SUBJECT_ORDER = ["算数", "国語", "社会", "理科", "英語", "学級経営", "特別支援"];
 
 function readMeta(slug: string): Material {
   const raw = fs.readFileSync(path.join(CONTENT_DIR, `${slug}.json`), "utf-8");
