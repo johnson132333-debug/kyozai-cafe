@@ -7,10 +7,14 @@ export type Material = {
   slug: string;
   title: string;
   subject: string;
+  unit: string;
   grade: string;
   description: string;
   tags: string[];
 };
+
+// 教科の表示順（学校でよくある並び順）。ここにない教科は末尾に追加されます。
+const SUBJECT_ORDER = ["算数", "国語", "社会", "理科", "英語", "学級経営"];
 
 function readMeta(slug: string): Material {
   const raw = fs.readFileSync(path.join(CONTENT_DIR, `${slug}.json`), "utf-8");
@@ -39,8 +43,11 @@ export function getMaterialCode(slug: string): string {
   return fs.readFileSync(htmlPath, "utf-8");
 }
 
-export function getAllSubjects(materials: Material[]): string[] {
-  return Array.from(new Set(materials.map((m) => m.subject))).sort((a, b) =>
-    a.localeCompare(b, "ja")
-  );
+export function getOrderedSubjects(materials: Material[]): string[] {
+  const present = new Set(materials.map((m) => m.subject));
+  const ordered = SUBJECT_ORDER.filter((s) => present.has(s));
+  const rest = Array.from(present)
+    .filter((s) => !SUBJECT_ORDER.includes(s))
+    .sort((a, b) => a.localeCompare(b, "ja"));
+  return [...ordered, ...rest];
 }

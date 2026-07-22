@@ -9,7 +9,7 @@ export function MaterialCard({ material }: { material: Material }) {
     >
       <div className="mb-2 flex flex-wrap gap-1.5">
         <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-          {material.subject}
+          {material.unit}
         </span>
         <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
           {material.grade}

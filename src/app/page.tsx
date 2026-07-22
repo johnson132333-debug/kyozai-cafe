@@ -1,10 +1,10 @@
-import { getAllMaterials, getAllSubjects } from "@/lib/materials";
+import { getAllMaterials, getOrderedSubjects } from "@/lib/materials";
 import { MaterialGrid } from "@/components/MaterialGrid";
 import { AdSlot } from "@/components/AdSlot";
 
 export default function Home() {
   const materials = getAllMaterials();
-  const subjects = getAllSubjects(materials);
+  const subjects = getOrderedSubjects(materials);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
@@ -37,7 +37,7 @@ export default function Home() {
           このサイトについて
         </h2>
         <p className="mb-2">
-          教材ラボは、AIで作成した授業用の小さなWebツールを先生同士で共有・活用するためのライブラリです。
+          教材カフェは、AIで作成した授業用の小さなWebツールを先生同士で共有・活用するためのライブラリです。
           各教材はブラウザだけで動くHTML/CSS/JavaScriptで作られており、インストール不要でその場から試せます。
         </p>
         <p>
