@@ -7,6 +7,7 @@ import {
   getMaterialCode,
   isStudentFacing,
 } from "@/lib/materials";
+import { CopyLinkButton } from "@/components/CopyLinkButton";
 
 export async function generateStaticParams() {
   return getAllMaterials()
@@ -48,6 +49,10 @@ export default async function StudentPlayPage(
           {material.title}
         </h1>
         <span className="w-24 shrink-0" aria-hidden="true" />
+      </div>
+
+      <div className="mb-4 text-center">
+        <CopyLinkButton />
       </div>
 
       <div className="overflow-hidden rounded-2xl border-4 border-slate-200 dark:border-slate-800">

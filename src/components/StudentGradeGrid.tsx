@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Material } from "@/lib/materials";
@@ -13,6 +12,7 @@ import {
   DEFAULT_SUBJECT_ICON,
 } from "@/lib/subjectDisplay";
 import { STUDENT_ICONS, DEFAULT_STUDENT_ICON } from "@/lib/studentIcons";
+import { CopyLinkButton } from "./CopyLinkButton";
 
 type StudentGradeGridProps = {
   materials: Material[];
@@ -54,32 +54,6 @@ function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
           </button>
         </span>
       ))}
-    </div>
-  );
-}
-
-function CopyLinkButton() {
-  const [copied, setCopied] = useState(false);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error("Copy failed", error);
-    }
-  }
-
-  return (
-    <div className="mb-8 text-center">
-      <button
-        type="button"
-        onClick={handleCopy}
-        className="rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900"
-      >
-        {copied ? "✅ コピーしました！このまま貼り付けてください" : "🔗 このページのリンクをコピー（児童生徒に送る）"}
-      </button>
     </div>
   );
 }
@@ -129,7 +103,9 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
     return (
       <div>
         <Breadcrumb crumbs={[{ label: "ぜんぶのアプリ", onClick: resetToGradePicker }]} />
-        <CopyLinkButton />
+        <div className="mb-8 text-center">
+          <CopyLinkButton />
+        </div>
         <div className="space-y-12">
           {subjects.map((subject) => {
             const items = materials.filter((m) => m.subject === subject);
@@ -201,7 +177,9 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
     return (
       <div>
         <Breadcrumb crumbs={[gradeCrumb]} />
-        <CopyLinkButton />
+        <div className="mb-8 text-center">
+          <CopyLinkButton />
+        </div>
         <p className="mb-6 text-center text-base font-bold text-slate-700 dark:text-slate-300">
           きょうかを えらんでね
         </p>
@@ -242,7 +220,9 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
     return (
       <div>
         <Breadcrumb crumbs={[gradeCrumb, subjectCrumb]} />
-        <CopyLinkButton />
+        <div className="mb-8 text-center">
+          <CopyLinkButton />
+        </div>
         <p className="mb-6 text-center text-base font-bold text-slate-700 dark:text-slate-300">
           どれにする？ えらんでね
         </p>
@@ -279,7 +259,9 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
   return (
     <div>
       <Breadcrumb crumbs={crumbs} />
-      <CopyLinkButton />
+      <div className="mb-8 text-center">
+        <CopyLinkButton />
+      </div>
       {finalMaterials.length === 0 ? (
         <p className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">
           アプリがまだありません。
