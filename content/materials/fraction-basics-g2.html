@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>分数のはじめ（2年生）</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 26px 24px;
+    text-align: center;
+  }
+  h1 { font-size: 19px; margin: 0 0 4px; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; }
+
+  .buttons { display: flex; gap: 8px; margin-bottom: 20px; }
+  .buttons button {
+    flex: 1;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 12px;
+    border: 2px solid #cbd5e1;
+    background: #f8fafc;
+    cursor: pointer;
+  }
+  .buttons button.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+
+  svg { width: 220px; height: 220px; margin: 0 auto 16px; display: block; }
+
+  .fraction-label {
+    font-size: 30px;
+    font-weight: 700;
+    color: #2563eb;
+    margin-bottom: 6px;
+  }
+  .fraction-label sup, .fraction-label sub { font-size: 18px; }
+  .caption { font-size: 14px; color: #475569; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>分数のはじめ</h1>
+    <div class="sub">ケーキを等分すると、1つ分の大きさが分数になるよ</div>
+
+    <div class="buttons" id="buttons">
+      <button data-n="2" class="active">2等分</button>
+      <button data-n="3">3等分</button>
+      <button data-n="4">4等分</button>
+    </div>
+
+    <svg id="pie" viewBox="0 0 200 200"></svg>
+
+    <div class="fraction-label" id="fractionLabel"></div>
+    <div class="caption" id="caption"></div>
+  </div>
+
+<script>
+  const NS = "http://www.w3.org/2000/svg";
+  const pie = document.getElementById("pie");
+  const fractionLabel = document.getElementById("fractionLabel");
+  const caption = document.getElementById("caption");
+  const buttons = document.querySelectorAll("#buttons button");
+
+  const cx = 100, cy = 100, r = 90;
+
+  function polarToCartesian(angleDeg) {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  const readingWords = { 2: "に", 3: "さん", 4: "し" };
+
+  function render(n) {
+    pie.innerHTML = "";
+    const anglePer = 360 / n;
+
+    for (let i = 0; i < n; i++) {
+      const start = i * anglePer;
+      const end = start + anglePer;
+      const p1 = polarToCartesian(start);
+      const p2 = polarToCartesian(end);
+      const largeArc = anglePer > 180 ? 1 : 0;
+      const path = document.createElementNS(NS, "path");
+      const d = `M ${cx} ${cy} L ${p1.x} ${p1.y} A ${r} ${r} 0 ${largeArc} 1 ${p2.x} ${p2.y} Z`;
+      path.setAttribute("d", d);
+      path.setAttribute("fill", i === 0 ? "#2563eb" : "#e2e8f0");
+      path.setAttribute("stroke", "#ffffff");
+      path.setAttribute("stroke-width", "3");
+      pie.appendChild(path);
+    }
+
+    fractionLabel.innerHTML = `<sup>1</sup>&frasl;<sub>${n}</sub>`;
+    caption.textContent = `1つのケーキを${n}つに等分した、そのうちの1つ分（${n}分の1）`;
+
+    buttons.forEach((btn) => btn.classList.toggle("active", Number(btn.dataset.n) === n));
+  }
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => render(Number(btn.dataset.n)));
+  });
+
+  render(2);
+</script>
+</body>
+</html>

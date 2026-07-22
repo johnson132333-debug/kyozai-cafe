@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>同じ分母の分数のたし算・ひき算（3年生）</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 26px 24px;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; text-align: center; }
+
+  .row-label { display: flex; justify-content: space-between; font-size: 13px; color: #64748b; margin-bottom: 6px; }
+  .btn-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .btn-row button {
+    flex: 1;
+    padding: 8px;
+    font-size: 13px;
+    border-radius: 8px;
+    border: 2px solid #cbd5e1;
+    background: #f8fafc;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-row button.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+
+  input[type="range"] { width: 100%; margin-bottom: 14px; }
+
+  .equation {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 16px 0;
+  }
+  .equation .frac { display: inline-block; vertical-align: middle; }
+  .equation sup, .equation sub { font-size: 15px; }
+  .equation .op { margin: 0 8px; color: #64748b; }
+  .equation .eq { margin: 0 8px; }
+  .equation .result { color: #2563eb; }
+
+  .bar-track {
+    display: flex;
+    width: 100%;
+    height: 44px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #cbd5e1;
+    margin-bottom: 6px;
+  }
+  .bar-seg { flex: 1; border-right: 1px solid rgba(255,255,255,0.7); }
+  .bar-seg:last-child { border-right: none; }
+  .bar-seg.a { background: #2563eb; }
+  .bar-seg.b { background: #16a34a; }
+  .bar-seg.empty { background: #e2e8f0; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>同じ分母の分数のたし算・ひき算</h1>
+    <div class="sub">分母をそろえて、たし算とひき算をたしかめよう</div>
+
+    <div class="row-label"><span>分母</span></div>
+    <div class="btn-row" id="denomButtons">
+      <button data-d="4">4</button>
+      <button data-d="5" class="active">5</button>
+      <button data-d="6">6</button>
+    </div>
+
+    <div class="row-label"><span>けいさん</span></div>
+    <div class="btn-row" id="opButtons">
+      <button data-op="+" class="active">たし算</button>
+      <button data-op="-">ひき算</button>
+    </div>
+
+    <div class="row-label"><span>1つ目の分数の分子</span><span id="num1Value">2</span></div>
+    <input type="range" id="num1Slider" min="0" max="5" value="2" />
+
+    <div class="row-label"><span>2つ目の分数の分子</span><span id="num2Value">1</span></div>
+    <input type="range" id="num2Slider" min="0" max="5" value="1" />
+
+    <div class="equation" id="equation"></div>
+    <div class="bar-track" id="barTrack"></div>
+  </div>
+
+<script>
+  const denomButtons = document.querySelectorAll("#denomButtons button");
+  const opButtons = document.querySelectorAll("#opButtons button");
+  const num1Slider = document.getElementById("num1Slider");
+  const num2Slider = document.getElementById("num2Slider");
+  const num1Value = document.getElementById("num1Value");
+  const num2Value = document.getElementById("num2Value");
+  const equation = document.getElementById("equation");
+  const barTrack = document.getElementById("barTrack");
+
+  let denom = 5;
+  let op = "+";
+
+  function fracHtml(num, den, cls) {
+    return `<span class="frac ${cls || ""}"><sup>${num}</sup>&frasl;<sub>${den}</sub></span>`;
+  }
+
+  function clampInputs() {
+    num1Slider.max = denom;
+    num2Slider.max = denom;
+    let n1 = Number(num1Slider.value);
+    let n2 = Number(num2Slider.value);
+    if (n1 > denom) n1 = denom;
+
+    if (op === "+") {
+      if (n2 > denom - n1) n2 = denom - n1;
+    } else {
+      if (n2 > n1) n2 = n1;
+    }
+    num1Slider.value = n1;
+    num2Slider.value = n2;
+    num1Value.textContent = n1;
+    num2Value.textContent = n2;
+    return { n1, n2 };
+  }
+
+  function render() {
+    const { n1, n2 } = clampInputs();
+    const result = op === "+" ? n1 + n2 : n1 - n2;
+    const opSymbol = op === "+" ? "+" : "−";
+
+    equation.innerHTML =
+      fracHtml(n1, denom) +
+      `<span class="op">${opSymbol}</span>` +
+      fracHtml(n2, denom) +
+      `<span class="eq">=</span>` +
+      fracHtml(result, denom, "result");
+
+    barTrack.innerHTML = "";
+    for (let i = 0; i < denom; i++) {
+      const seg = document.createElement("div");
+      if (op === "+") {
+        if (i < n1) seg.className = "bar-seg a";
+        else if (i < n1 + n2) seg.className = "bar-seg b";
+        else seg.className = "bar-seg empty";
+      } else {
+        if (i < result) seg.className = "bar-seg a";
+        else if (i < n1) seg.className = "bar-seg empty";
+        else seg.className = "bar-seg empty";
+      }
+      barTrack.appendChild(seg);
+    }
+  }
+
+  denomButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      denom = Number(btn.dataset.d);
+      denomButtons.forEach((b) => b.classList.toggle("active", b === btn));
+      render();
+    });
+  });
+
+  opButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      op = btn.dataset.op;
+      opButtons.forEach((b) => b.classList.toggle("active", b === btn));
+      render();
+    });
+  });
+
+  num1Slider.addEventListener("input", render);
+  num2Slider.addEventListener("input", render);
+
+  render();
+</script>
+</body>
+</html>

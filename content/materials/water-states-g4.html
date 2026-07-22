@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>水のすがたのへんか（4年生）</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 440px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 26px 24px;
+  }
+  h1 { font-size: 19px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; text-align: center; }
+
+  .state-box {
+    text-align: center;
+    padding: 24px 10px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    transition: background 0.4s;
+  }
+  .state-box .icon { font-size: 64px; }
+  .state-box .name { font-size: 22px; font-weight: 700; margin-top: 6px; }
+  .state-box .phenomenon { font-size: 14px; color: #64748b; margin-top: 4px; }
+  .state-box.solid { background: #dbeafe; }
+  .state-box.solid .name { color: #1d4ed8; }
+  .state-box.liquid { background: #cffafe; }
+  .state-box.liquid .name { color: #0e7490; }
+  .state-box.gas { background: #fee2e2; }
+  .state-box.gas .name { color: #b91c1c; }
+
+  .temp-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 6px;
+  }
+  input[type="range"] { width: 100%; margin-bottom: 8px; }
+  .scale-marks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 18px;
+  }
+
+  .note-list {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.8;
+  }
+  .note-list li { margin-bottom: 2px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>水のすがたのへんか</h1>
+    <div class="sub">温度をかえて、水のすがたを観察しよう（4年生）</div>
+
+    <div class="state-box" id="stateBox">
+      <div class="icon" id="stateIcon"></div>
+      <div class="name" id="stateName"></div>
+      <div class="phenomenon" id="statePhenomenon"></div>
+    </div>
+
+    <div class="temp-row">
+      <span>温度</span>
+      <span id="tempValue">20℃</span>
+    </div>
+    <input type="range" id="tempSlider" min="-20" max="120" value="20" />
+    <div class="scale-marks">
+      <span>-20℃</span>
+      <span>0℃</span>
+      <span>100℃</span>
+      <span>120℃</span>
+    </div>
+
+    <ul class="note-list">
+      <li>0℃で氷が「とける」、水になる</li>
+      <li>0℃より下がると、水が「こおる」</li>
+      <li>100℃で水が「ふっとうする」、湯気（ゆげ）になる</li>
+    </ul>
+  </div>
+
+<script>
+  const slider = document.getElementById("tempSlider");
+  const tempValue = document.getElementById("tempValue");
+  const stateBox = document.getElementById("stateBox");
+  const stateIcon = document.getElementById("stateIcon");
+  const stateName = document.getElementById("stateName");
+  const statePhenomenon = document.getElementById("statePhenomenon");
+
+  function render() {
+    const temp = Number(slider.value);
+    tempValue.textContent = `${temp}℃`;
+
+    let stateClass, icon, name, phenomenon;
+    if (temp < 0) {
+      stateClass = "solid";
+      icon = "🧊";
+      name = "こおり（固体）";
+      phenomenon = "水がこおって、かたい氷になっている";
+    } else if (temp < 100) {
+      stateClass = "liquid";
+      icon = "💧";
+      name = "水（液体）";
+      phenomenon = "さらさら流れる、いつもの水のすがた";
+    } else {
+      stateClass = "gas";
+      icon = "☁️";
+      name = "ゆげ（気体）";
+      phenomenon = "水がふっとうして、目に見える湯気になっている";
+    }
+
+    stateBox.className = "state-box " + stateClass;
+    stateIcon.textContent = icon;
+    stateName.textContent = name;
+    statePhenomenon.textContent = phenomenon;
+  }
+
+  slider.addEventListener("input", render);
+  render();
+</script>
+</body>
+</html>

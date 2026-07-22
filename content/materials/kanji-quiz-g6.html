@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>漢字読み方クイズ</title>
+<title>漢字読み方クイズ（6年生）</title>
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
@@ -71,8 +71,8 @@
 </head>
 <body>
   <div class="card">
-    <h1>漢字読み方クイズ</h1>
-    <div class="sub">正しい読み方を選ぼう（全5問）</div>
+    <h1>漢字読み方クイズ（6年生）</h1>
+    <div class="sub">正しい読み方を選ぼう（全6問）</div>
 
     <div id="quiz">
       <div class="progress" id="progress"></div>
@@ -86,13 +86,14 @@
   </div>
 
 <script>
-  // ここを書き換えれば、学年別の漢字リストに差し替えられます
+  // 6年生配当漢字を少なくとも1文字含む熟語
   const questions = [
-    { q: "境界", choices: ["きょうかい", "けいかい", "きょうがい", "けいがい"], answer: 0 },
-    { q: "深呼吸", choices: ["しんこきゅう", "しんこうきゅう", "じんこきゅう", "しんこきょう"], answer: 0 },
-    { q: "垂直", choices: ["すいちょく", "たいちょく", "すいじき", "たいじき"], answer: 0 },
-    { q: "郵便局", choices: ["ゆうびんきょく", "ゆびんきょく", "ゆうびんぎょく", "ゆびんぎょく"], answer: 0 },
-    { q: "潔白", choices: ["けつはく", "けっぱく", "けつばく", "けっぱぐ"], answer: 1 },
+    { q: "尊敬", choices: ["そんきょう", "そんけい", "たっとけい", "そんじょう"], answer: 1 },
+    { q: "討論", choices: ["とうろん", "とうぎ", "とうろく", "こんろん"], answer: 0 },
+    { q: "探検", choices: ["たんさく", "さがしけん", "たんけん", "たんけみ"], answer: 2 },
+    { q: "存在", choices: ["ぞんざい", "そんぜん", "げんぞん", "そんざい"], answer: 3 },
+    { q: "警告", choices: ["けいごく", "きょうこく", "けいこく", "けいほう"], answer: 2 },
+    { q: "拡張", choices: ["かくばり", "こうちょう", "かくちょう", "かくはり"], answer: 2 },
   ];
 
   let index = 0;

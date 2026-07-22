@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>分数のかけ算・わり算（6年生）</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 26px 24px;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; text-align: center; }
+
+  .picker-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  select {
+    font-size: 18px;
+    font-weight: 700;
+    padding: 6px 6px;
+    border-radius: 8px;
+    border: 2px solid #cbd5e1;
+    text-align: center;
+  }
+  .picker-row .slash { font-size: 18px; color: #64748b; }
+
+  .op-buttons { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+  .op-buttons button {
+    padding: 6px 18px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 10px;
+    border: 2px solid #cbd5e1;
+    background: #f8fafc;
+    cursor: pointer;
+  }
+  .op-buttons button.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+
+  .equation {
+    text-align: center;
+    font-size: 15px;
+    color: #475569;
+    margin-bottom: 14px;
+    line-height: 1.8;
+  }
+  .equation .result { color: #2563eb; font-weight: 700; }
+  .equation sup, .equation sub { font-size: 11px; }
+
+  .grid-wrap { display: flex; justify-content: center; }
+  .grid {
+    display: grid;
+    gap: 2px;
+    background: #cbd5e1;
+    border: 2px solid #cbd5e1;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .cell { background: #f8fafc; width: 28px; height: 28px; }
+  .cell.hit { background: #2563eb; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>分数のかけ算・わり算</h1>
+    <div class="sub">面積図で、かけ算・わり算の意味をたしかめよう</div>
+
+    <div class="picker-row">
+      <select id="num1"></select>
+      <span class="slash">/</span>
+      <select id="den1"></select>
+    </div>
+    <div class="op-buttons" id="opButtons">
+      <button data-op="×" class="active">× かけ算</button>
+      <button data-op="÷">÷ わり算</button>
+    </div>
+    <div class="picker-row">
+      <select id="num2"></select>
+      <span class="slash">/</span>
+      <select id="den2"></select>
+    </div>
+
+    <div class="equation" id="equation"></div>
+    <div class="grid-wrap"><div class="grid" id="grid"></div></div>
+  </div>
+
+<script>
+  const num1Sel = document.getElementById("num1");
+  const den1Sel = document.getElementById("den1");
+  const num2Sel = document.getElementById("num2");
+  const den2Sel = document.getElementById("den2");
+  const opButtons = document.querySelectorAll("#opButtons button");
+  const equation = document.getElementById("equation");
+  const grid = document.getElementById("grid");
+
+  const DENOMS = [2, 3, 4, 5, 6];
+  let op = "×";
+
+  function fillDenomSelect(sel, defaultVal) {
+    DENOMS.forEach((d) => {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d;
+      if (d === defaultVal) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function fillNumSelect(sel, den, defaultVal) {
+    sel.innerHTML = "";
+    for (let n = 1; n < den; n++) {
+      const opt = document.createElement("option");
+      opt.value = n;
+      opt.textContent = n;
+      if (n === defaultVal) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+
+  fillDenomSelect(den1Sel, 3);
+  fillDenomSelect(den2Sel, 4);
+  fillNumSelect(num1Sel, 3, 2);
+  fillNumSelect(num2Sel, 4, 3);
+
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+  function fracHtml(n, d, cls) {
+    return `<span class="${cls || ""}"><sup>${n}</sup>&frasl;<sub>${d}</sub></span>`;
+  }
+
+  function render() {
+    const n1 = Number(num1Sel.value);
+    const d1 = Number(den1Sel.value);
+    const n2 = Number(num2Sel.value);
+    const d2 = Number(den2Sel.value);
+
+    // わり算は「わる数の逆数をかける」に変換して、同じ面積図で表す
+    const effN2 = op === "×" ? n2 : d2;
+    const effD2 = op === "×" ? d2 : n2;
+
+    const resultNum = n1 * effN2;
+    const resultDen = d1 * effD2;
+    const g = gcd(resultNum, resultDen);
+    const simpN = resultNum / g;
+    const simpD = resultDen / g;
+
+    let eqHtml;
+    if (op === "×") {
+      eqHtml =
+        fracHtml(n1, d1) + " × " + fracHtml(n2, d2) + " = " +
+        fracHtml(resultNum, resultDen, "result");
+    } else {
+      eqHtml =
+        fracHtml(n1, d1) + " ÷ " + fracHtml(n2, d2) + " = " +
+        fracHtml(n1, d1) + " × " + fracHtml(d2, n2) + " = " +
+        fracHtml(resultNum, resultDen, "result");
+    }
+    if (simpD !== resultDen) {
+      eqHtml += "　（約分すると " + fracHtml(simpN, simpD, "result") + "）";
+    }
+    equation.innerHTML = eqHtml;
+
+    grid.style.gridTemplateColumns = `repeat(${effD2}, 28px)`;
+    grid.innerHTML = "";
+    for (let row = 0; row < d1; row++) {
+      for (let col = 0; col < effD2; col++) {
+        const cell = document.createElement("div");
+        cell.className = "cell" + (row < n1 && col < effN2 ? " hit" : "");
+        grid.appendChild(cell);
+      }
+    }
+  }
+
+  den1Sel.addEventListener("change", () => {
+    fillNumSelect(num1Sel, Number(den1Sel.value), 1);
+    render();
+  });
+  den2Sel.addEventListener("change", () => {
+    fillNumSelect(num2Sel, Number(den2Sel.value), 1);
+    render();
+  });
+  num1Sel.addEventListener("change", render);
+  num2Sel.addEventListener("change", render);
+
+  opButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      op = btn.dataset.op;
+      opButtons.forEach((b) => b.classList.toggle("active", b === btn));
+      render();
+    });
+  });
+
+  render();
+</script>
+</body>
+</html>

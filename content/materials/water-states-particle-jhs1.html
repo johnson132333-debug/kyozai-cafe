@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>水の三態変化シミュレーター</title>
+<title>粒子モデルで見る状態変化</title>
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
@@ -26,17 +26,24 @@
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
     padding: 28px 24px;
   }
-  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  h1 { font-size: 19px; margin: 0 0 4px; text-align: center; }
   .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; text-align: center; }
   .state-label {
     text-align: center;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
   }
   .state-label.solid { color: #2563eb; }
   .state-label.liquid { color: #0891b2; }
   .state-label.gas { color: #dc2626; }
+  .state-desc {
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 10px;
+    min-height: 32px;
+  }
   canvas {
     display: block;
     width: 100%;
@@ -65,10 +72,11 @@
 </head>
 <body>
   <div class="card">
-    <h1>水の三態変化シミュレーター</h1>
-    <div class="sub">温度を変えて、粒子の動きの違いを見てみよう</div>
+    <h1>粒子モデルで見る状態変化</h1>
+    <div class="sub">温度を変えて、粒子（分子）の運動の違いを見てみよう</div>
 
     <div class="state-label" id="stateLabel">固体（氷）</div>
+    <div class="state-desc" id="stateDesc"></div>
     <canvas id="canvas"></canvas>
 
     <div class="temp-row">
@@ -82,7 +90,7 @@
       <span>100℃（沸点）</span>
       <span>120℃</span>
     </div>
-    <div class="note">0℃で固体→液体、100℃で液体→気体に変化します</div>
+    <div class="note">粒子の「並び方」と「動きの速さ」に注目しよう</div>
   </div>
 
 <script>
@@ -91,6 +99,7 @@
   const slider = document.getElementById("tempSlider");
   const tempValue = document.getElementById("tempValue");
   const stateLabel = document.getElementById("stateLabel");
+  const stateDesc = document.getElementById("stateDesc");
 
   function resizeCanvas() {
     canvas.width = canvas.clientWidth * devicePixelRatio;
@@ -131,6 +140,12 @@
     if (state === "solid") return "固体（氷）";
     if (state === "liquid") return "液体（水）";
     return "気体（水蒸気）";
+  }
+
+  function stateDescText(state) {
+    if (state === "solid") return "粒子は規則正しく並び、その場でわずかに振動している";
+    if (state === "liquid") return "粒子どうしの結びつきは残ったまま、位置を変えながら動く";
+    return "粒子どうしの結びつきがなくなり、自由に飛び回っている";
   }
 
   function update(state) {
@@ -196,6 +211,7 @@
       currentState = state;
       stateLabel.textContent = stateLabelText(state);
       stateLabel.className = "state-label " + state;
+      stateDesc.textContent = stateDescText(state);
       setSpeed(state);
     }
     update(state);

@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>通分してたし算しよう（5年生）</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 26px 24px;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 20px; text-align: center; }
+
+  .picker-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  select {
+    font-size: 20px;
+    font-weight: 700;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 2px solid #cbd5e1;
+    text-align: center;
+  }
+  .picker-row .slash { font-size: 20px; color: #64748b; }
+  .picker-row .plus { font-size: 22px; color: #64748b; margin: 0 4px; }
+
+  .step {
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .step-title { font-size: 12px; color: #94a3b8; margin-bottom: 6px; }
+  .step-eq { font-size: 20px; font-weight: 700; text-align: center; color: #1e293b; }
+  .step-eq sup, .step-eq sub { font-size: 13px; }
+  .step-eq .arrow { color: #94a3b8; margin: 0 8px; }
+  .step-eq .result { color: #2563eb; }
+
+  .bar-track {
+    display: flex;
+    width: 100%;
+    height: 34px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #cbd5e1;
+    margin-top: 10px;
+  }
+  .bar-seg { flex: 1; border-right: 1px solid rgba(255,255,255,0.6); }
+  .bar-seg:last-child { border-right: none; }
+  .bar-seg.a { background: #2563eb; }
+  .bar-seg.b { background: #16a34a; }
+  .bar-seg.empty { background: #e2e8f0; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>通分してたし算しよう</h1>
+    <div class="sub">分母がちがう分数も、そろえればたし算できるよ</div>
+
+    <div class="picker-row">
+      <select id="num1"></select>
+      <span class="slash">/</span>
+      <select id="den1"></select>
+      <span class="plus">＋</span>
+      <select id="num2"></select>
+      <span class="slash">/</span>
+      <select id="den2"></select>
+    </div>
+
+    <div class="step">
+      <div class="step-title">① 分母の最小公倍数を見つける</div>
+      <div class="step-eq" id="lcmEq"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">② 通分してたし算する</div>
+      <div class="step-eq" id="sumEq"></div>
+      <div class="bar-track" id="barTrack"></div>
+    </div>
+  </div>
+
+<script>
+  const num1Sel = document.getElementById("num1");
+  const den1Sel = document.getElementById("den1");
+  const num2Sel = document.getElementById("num2");
+  const den2Sel = document.getElementById("den2");
+  const lcmEq = document.getElementById("lcmEq");
+  const sumEq = document.getElementById("sumEq");
+  const barTrack = document.getElementById("barTrack");
+
+  const DENOMS = [2, 3, 4, 6];
+
+  function fillDenomSelect(sel, defaultVal) {
+    DENOMS.forEach((d) => {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d;
+      if (d === defaultVal) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function fillNumSelect(sel, den, defaultVal) {
+    sel.innerHTML = "";
+    for (let n = 1; n < den; n++) {
+      const opt = document.createElement("option");
+      opt.value = n;
+      opt.textContent = n;
+      if (n === defaultVal) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+
+  fillDenomSelect(den1Sel, 3);
+  fillDenomSelect(den2Sel, 4);
+  fillNumSelect(num1Sel, 3, 1);
+  fillNumSelect(num2Sel, 4, 1);
+
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+  function lcm(a, b) { return (a * b) / gcd(a, b); }
+
+  function fracHtml(n, d, cls) {
+    return `<span class="${cls || ""}"><sup>${n}</sup>&frasl;<sub>${d}</sub></span>`;
+  }
+
+  function render() {
+    const n1 = Number(num1Sel.value);
+    const d1 = Number(den1Sel.value);
+    const n2 = Number(num2Sel.value);
+    const d2 = Number(den2Sel.value);
+    const l = lcm(d1, d2);
+    const scale1 = l / d1;
+    const scale2 = l / d2;
+    const cn1 = n1 * scale1;
+    const cn2 = n2 * scale2;
+    const sum = cn1 + cn2;
+
+    lcmEq.innerHTML = `${d1} と ${d2} の最小公倍数 = <span class="result">${l}</span>`;
+
+    sumEq.innerHTML =
+      fracHtml(n1, d1) +
+      `<span class="arrow">→</span>` +
+      fracHtml(cn1, l) +
+      `　＋　` +
+      fracHtml(n2, d2) +
+      `<span class="arrow">→</span>` +
+      fracHtml(cn2, l) +
+      `　＝　` +
+      fracHtml(sum, l, "result");
+
+    barTrack.innerHTML = "";
+    for (let i = 0; i < l; i++) {
+      const seg = document.createElement("div");
+      if (i < cn1) seg.className = "bar-seg a";
+      else if (i < cn1 + cn2) seg.className = "bar-seg b";
+      else seg.className = "bar-seg empty";
+      barTrack.appendChild(seg);
+    }
+  }
+
+  den1Sel.addEventListener("change", () => {
+    fillNumSelect(num1Sel, Number(den1Sel.value), 1);
+    render();
+  });
+  den2Sel.addEventListener("change", () => {
+    fillNumSelect(num2Sel, Number(den2Sel.value), 1);
+    render();
+  });
+  num1Sel.addEventListener("change", render);
+  num2Sel.addEventListener("change", render);
+
+  render();
+</script>
+</body>
+</html>
