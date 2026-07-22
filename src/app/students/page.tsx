@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { getAllMaterials, getOrderedSubjects, isStudentFacing } from "@/lib/materials";
 import { StudentGradeGrid } from "@/components/StudentGradeGrid";
@@ -23,7 +24,9 @@ export default function StudentsPage() {
         </p>
       </div>
 
-      <StudentGradeGrid materials={materials} subjects={subjects} />
+      <Suspense fallback={null}>
+        <StudentGradeGrid materials={materials} subjects={subjects} />
+      </Suspense>
 
       <div className="mt-16 text-center">
         <Link

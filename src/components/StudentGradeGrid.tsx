@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Material } from "@/lib/materials";
 import { getOrderedGrades } from "@/lib/grades";
 import { GRADE_STYLES, GRADE_ICONS, GRADE_LABELS, DEFAULT_GRADE_STYLE } from "@/lib/gradeDisplay";
@@ -26,11 +27,21 @@ function uniqueUnitsInOrder(items: Material[]): string[] {
   return seen;
 }
 
+function buildQuery(parts: { all?: boolean; grade?: string; subject?: string; unit?: string }) {
+  const params = new URLSearchParams();
+  if (parts.all) params.set("all", "1");
+  if (parts.grade) params.set("grade", parts.grade);
+  if (parts.subject) params.set("subject", parts.subject);
+  if (parts.unit) params.set("unit", parts.unit);
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
+}
+
 type Crumb = { label: string; onClick: () => void };
 
 function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
+    <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
       {crumbs.map((crumb, i) => (
         <span key={i} className="flex items-center gap-2">
           {i > 0 && <span className="text-slate-300 dark:text-slate-600">›</span>}
@@ -47,20 +58,48 @@ function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
   );
 }
 
+function CopyLinkButton() {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Copy failed", error);
+    }
+  }
+
+  return (
+    <div className="mb-8 text-center">
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="rounded-full bg-blue-50 px-4 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:hover:bg-blue-900"
+      >
+        {copied ? "✅ コピーしました！このまま貼り付けてください" : "🔗 このページのリンクをコピー（児童生徒に送る）"}
+      </button>
+    </div>
+  );
+}
+
 export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps) {
-  const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const grades = useMemo(() => getOrderedGrades(materials.map((m) => m.grade)), [materials]);
+  const showAll = searchParams.get("all") === "1";
+  const selectedGrade = searchParams.get("grade");
+  const selectedSubject = searchParams.get("subject");
+  const selectedUnit = searchParams.get("unit");
 
-  const resetToGradePicker = () => {
-    setSelectedGrade(null);
-    setShowAll(false);
-    setSelectedSubject(null);
-    setSelectedUnit(null);
+  const grades = getOrderedGrades(materials.map((m) => m.grade));
+
+  const goTo = (parts: { all?: boolean; grade?: string; subject?: string; unit?: string }) => {
+    router.replace(pathname + buildQuery(parts), { scroll: false });
   };
+  const resetToGradePicker = () => goTo({});
 
   function renderTiles(
     items: Material[],
@@ -90,6 +129,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
     return (
       <div>
         <Breadcrumb crumbs={[{ label: "ぜんぶのアプリ", onClick: resetToGradePicker }]} />
+        <CopyLinkButton />
         <div className="space-y-12">
           {subjects.map((subject) => {
             const items = materials.filter((m) => m.subject === subject);
@@ -123,7 +163,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
             <button
               key={grade}
               type="button"
-              onClick={() => setSelectedGrade(grade)}
+              onClick={() => goTo({ grade })}
               className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-8 text-center transition hover:scale-[1.03] active:scale-[0.98] ${
                 GRADE_STYLES[grade] ?? DEFAULT_GRADE_STYLE
               }`}
@@ -136,7 +176,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
         <div className="mt-8 text-center">
           <button
             type="button"
-            onClick={() => setShowAll(true)}
+            onClick={() => goTo({ all: true })}
             className="rounded-full border-2 border-slate-200 px-5 py-2 text-sm font-medium text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           >
             ぜんぶ見る
@@ -161,6 +201,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
     return (
       <div>
         <Breadcrumb crumbs={[gradeCrumb]} />
+        <CopyLinkButton />
         <p className="mb-6 text-center text-base font-bold text-slate-700 dark:text-slate-300">
           きょうかを えらんでね
         </p>
@@ -174,7 +215,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
               <button
                 key={subject}
                 type="button"
-                onClick={() => setSelectedSubject(subject)}
+                onClick={() => goTo({ grade: selectedGrade, subject })}
                 className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-8 text-center transition hover:scale-[1.03] active:scale-[0.98] ${
                   SUBJECT_STYLES[subject] ?? DEFAULT_SUBJECT_STYLE
                 }`}
@@ -192,10 +233,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
   const subjectFiltered = gradeFiltered.filter((m) => m.subject === selectedSubject);
   const subjectCrumb: Crumb = {
     label: selectedSubject,
-    onClick: () => {
-      setSelectedSubject(null);
-      setSelectedUnit(null);
-    },
+    onClick: () => goTo({ grade: selectedGrade }),
   };
   const units = uniqueUnitsInOrder(subjectFiltered);
 
@@ -204,6 +242,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
     return (
       <div>
         <Breadcrumb crumbs={[gradeCrumb, subjectCrumb]} />
+        <CopyLinkButton />
         <p className="mb-6 text-center text-base font-bold text-slate-700 dark:text-slate-300">
           どれにする？ えらんでね
         </p>
@@ -212,7 +251,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
             <button
               key={unit}
               type="button"
-              onClick={() => setSelectedUnit(unit)}
+              onClick={() => goTo({ grade: selectedGrade, subject: selectedSubject, unit })}
               className="rounded-xl border-2 border-slate-200 bg-white px-5 py-4 text-center text-base font-bold text-slate-800 transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-blue-500 dark:hover:bg-slate-800"
             >
               {unit}
@@ -231,12 +270,16 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
 
   const crumbs = [gradeCrumb, subjectCrumb];
   if (units.length > 1 && selectedUnit) {
-    crumbs.push({ label: selectedUnit, onClick: () => setSelectedUnit(null) });
+    crumbs.push({
+      label: selectedUnit,
+      onClick: () => goTo({ grade: selectedGrade, subject: selectedSubject }),
+    });
   }
 
   return (
     <div>
       <Breadcrumb crumbs={crumbs} />
+      <CopyLinkButton />
       {finalMaterials.length === 0 ? (
         <p className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">
           アプリがまだありません。
