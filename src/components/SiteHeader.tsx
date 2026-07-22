@@ -6,7 +6,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-lg font-bold text-slate-900 dark:text-white">
-            教材ラボ
+            教材カフェ
           </span>
           <span className="hidden text-xs text-slate-500 sm:inline dark:text-slate-400">
             先生のためのすぐ使えるWeb教材集

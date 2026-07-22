@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "教材ラボ | 先生のためのすぐ使えるWeb教材集",
+  title: "教材カフェ | 先生のためのすぐ使えるWeb教材集",
   description:
     "クロード(Claude)で作成した授業用ツール・クイズ・シミュレーションをブラウザ上でその場に試し、コードをコピーして学校の授業ですぐに使える教材ライブラリです。",
 };
