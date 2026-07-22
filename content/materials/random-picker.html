@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ランダム指名ツール</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 28px 24px;
+    text-align: center;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; }
+  textarea {
+    width: 100%;
+    min-height: 90px;
+    border-radius: 12px;
+    border: 2px solid #cbd5e1;
+    padding: 10px;
+    font-size: 14px;
+    resize: vertical;
+    margin-bottom: 10px;
+    font-family: inherit;
+  }
+  .setup-actions { display: flex; gap: 8px; margin-bottom: 18px; }
+  .setup-actions button {
+    flex: 1;
+    padding: 10px;
+    font-size: 13px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .apply-btn { background: #2563eb; color: white; }
+  .reset-btn { background: #e2e8f0; color: #334155; }
+  .result-box {
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eff6ff;
+    border-radius: 16px;
+    font-size: 30px;
+    font-weight: 700;
+    color: #1d4ed8;
+    margin-bottom: 14px;
+    padding: 10px;
+  }
+  .stats { font-size: 13px; color: #64748b; margin-bottom: 14px; }
+  .pick-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: #16a34a;
+    color: white;
+    cursor: pointer;
+  }
+  .pick-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+  .remaining-list {
+    margin-top: 14px;
+    text-align: left;
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>ランダム指名ツール</h1>
+    <div class="sub">1行に1人ずつ名前や出席番号を入力してください</div>
+
+    <textarea id="namesInput">1
+2
+3
+4
+5
+6
+7
+8
+9
+10</textarea>
+    <div class="setup-actions">
+      <button class="apply-btn" id="applyBtn">このメンバーで開始</button>
+      <button class="reset-btn" id="resetBtn">全員を対象に戻す</button>
+    </div>
+
+    <div class="result-box" id="resultBox">ボタンを押してね</div>
+    <div class="stats" id="stats"></div>
+    <button class="pick-btn" id="pickBtn">ランダムに1人選ぶ</button>
+
+    <div class="remaining-list" id="remainingList"></div>
+  </div>
+
+<script>
+  const namesInput = document.getElementById("namesInput");
+  const applyBtn = document.getElementById("applyBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const resultBox = document.getElementById("resultBox");
+  const stats = document.getElementById("stats");
+  const pickBtn = document.getElementById("pickBtn");
+  const remainingList = document.getElementById("remainingList");
+
+  let all = [];
+  let remaining = [];
+
+  function parseNames() {
+    return namesInput.value
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+
+  function updateUI() {
+    stats.textContent = `残り ${remaining.length} / 全 ${all.length} 人`;
+    remainingList.textContent = remaining.length > 0 ? `未指名: ${remaining.join(" ")}` : "全員指名済みです";
+    pickBtn.disabled = remaining.length === 0;
+  }
+
+  applyBtn.addEventListener("click", () => {
+    all = parseNames();
+    remaining = [...all];
+    resultBox.textContent = "ボタンを押してね";
+    updateUI();
+  });
+
+  resetBtn.addEventListener("click", () => {
+    remaining = [...all];
+    resultBox.textContent = "ボタンを押してね";
+    updateUI();
+  });
+
+  pickBtn.addEventListener("click", () => {
+    if (remaining.length === 0) return;
+    const i = Math.floor(Math.random() * remaining.length);
+    const picked = remaining.splice(i, 1)[0];
+    resultBox.textContent = picked;
+    updateUI();
+  });
+
+  applyBtn.click();
+</script>
+</body>
+</html>

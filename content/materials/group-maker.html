@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>グループ分けツール</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 520px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 28px 24px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; text-align: center; }
+  textarea {
+    width: 100%;
+    min-height: 110px;
+    border-radius: 12px;
+    border: 2px solid #cbd5e1;
+    padding: 10px;
+    font-size: 14px;
+    resize: vertical;
+    margin-bottom: 12px;
+    font-family: inherit;
+  }
+  .config-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  .config-row input {
+    width: 60px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 2px solid #cbd5e1;
+    text-align: center;
+    font-size: 14px;
+  }
+  .make-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    margin-bottom: 18px;
+  }
+  .groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+  }
+  .group-card {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .group-card h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: #2563eb;
+  }
+  .group-card ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.7; }
+  .error { color: #dc2626; font-size: 13px; text-align: center; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>グループ分けツール</h1>
+    <div class="sub">1行に1人ずつ入力してください</div>
+
+    <textarea id="namesInput">田中
+佐藤
+鈴木
+高橋
+渡辺
+伊藤
+山本
+中村
+小林
+加藤</textarea>
+
+    <div class="config-row">
+      <span>グループ数</span>
+      <input type="number" id="groupCount" min="2" max="20" value="3" />
+    </div>
+
+    <button class="make-btn" id="makeBtn">グループ分けする</button>
+
+    <div class="error" id="error" style="display:none;"></div>
+    <div class="groups" id="groups"></div>
+  </div>
+
+<script>
+  const namesInput = document.getElementById("namesInput");
+  const groupCountInput = document.getElementById("groupCount");
+  const makeBtn = document.getElementById("makeBtn");
+  const groupsEl = document.getElementById("groups");
+  const errorEl = document.getElementById("error");
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function makeGroups() {
+    const names = namesInput.value
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    const groupCount = Math.max(2, Number(groupCountInput.value) || 0);
+
+    errorEl.style.display = "none";
+    groupsEl.innerHTML = "";
+
+    if (names.length < groupCount) {
+      errorEl.textContent = "人数がグループ数より少ないです";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    const shuffled = shuffle(names);
+    const groups = Array.from({ length: groupCount }, () => []);
+    shuffled.forEach((name, i) => {
+      groups[i % groupCount].push(name);
+    });
+
+    groups.forEach((members, i) => {
+      const card = document.createElement("div");
+      card.className = "group-card";
+      const listItems = members.map((m) => `<li>${m}</li>`).join("");
+      card.innerHTML = `<h3>グループ ${i + 1}（${members.length}人）</h3><ul>${listItems}</ul>`;
+      groupsEl.appendChild(card);
+    });
+  }
+
+  makeBtn.addEventListener("click", makeGroups);
+  makeGroups();
+</script>
+</body>
+</html>

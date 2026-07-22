@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>水の三態変化シミュレーター</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 28px 24px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 18px; text-align: center; }
+  .state-label {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .state-label.solid { color: #2563eb; }
+  .state-label.liquid { color: #0891b2; }
+  .state-label.gas { color: #dc2626; }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 220px;
+    background: #f1f5f9;
+    border-radius: 14px;
+    margin-bottom: 16px;
+  }
+  .temp-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 6px;
+  }
+  input[type="range"] { width: 100%; margin-bottom: 8px; }
+  .scale-marks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 16px;
+  }
+  .note { font-size: 12px; color: #94a3b8; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>水の三態変化シミュレーター</h1>
+    <div class="sub">温度を変えて、粒子の動きの違いを見てみよう</div>
+
+    <div class="state-label" id="stateLabel">固体（氷）</div>
+    <canvas id="canvas"></canvas>
+
+    <div class="temp-row">
+      <span>温度</span>
+      <span id="tempValue">-10℃</span>
+    </div>
+    <input type="range" id="tempSlider" min="-20" max="120" value="-10" />
+    <div class="scale-marks">
+      <span>-20℃</span>
+      <span>0℃（融点）</span>
+      <span>100℃（沸点）</span>
+      <span>120℃</span>
+    </div>
+    <div class="note">0℃で固体→液体、100℃で液体→気体に変化します</div>
+  </div>
+
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const slider = document.getElementById("tempSlider");
+  const tempValue = document.getElementById("tempValue");
+  const stateLabel = document.getElementById("stateLabel");
+
+  function resizeCanvas() {
+    canvas.width = canvas.clientWidth * devicePixelRatio;
+    canvas.height = canvas.clientHeight * devicePixelRatio;
+  }
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+
+  const PARTICLE_COUNT = 36;
+  let particles = [];
+
+  function initParticles() {
+    particles = [];
+    const cols = 6;
+    const rows = 6;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      particles.push({
+        baseX: (col + 0.5) / cols,
+        baseY: (row + 0.5) / rows,
+        x: (col + 0.5) / cols,
+        y: (row + 0.5) / rows,
+        vx: (Math.random() - 0.5) * 0.002,
+        vy: (Math.random() - 0.5) * 0.002,
+      });
+    }
+  }
+  initParticles();
+
+  function getState(temp) {
+    if (temp < 0) return "solid";
+    if (temp < 100) return "liquid";
+    return "gas";
+  }
+
+  function stateLabelText(state) {
+    if (state === "solid") return "固体（氷）";
+    if (state === "liquid") return "液体（水）";
+    return "気体（水蒸気）";
+  }
+
+  function update(state) {
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+
+    particles.forEach((p) => {
+      if (state === "solid") {
+        p.x = p.baseX + Math.sin(Date.now() / 150 + p.baseX * 20) * 0.01;
+        p.y = p.baseY + Math.cos(Date.now() / 150 + p.baseY * 20) * 0.01;
+      } else if (state === "liquid") {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0.03 || p.x > 0.97) p.vx *= -1;
+        if (p.y < 0.03 || p.y > 0.97) p.vy *= -1;
+        p.x = Math.min(0.97, Math.max(0.03, p.x));
+        p.y = Math.min(0.97, Math.max(0.03, p.y));
+      } else {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > 1) p.vx *= -1;
+        if (p.y < 0 || p.y > 1) p.vy *= -1;
+        p.x = Math.min(1, Math.max(0, p.x));
+        p.y = Math.min(1, Math.max(0, p.y));
+      }
+    });
+  }
+
+  function draw(state) {
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    const color = state === "solid" ? "#2563eb" : state === "liquid" ? "#0891b2" : "#dc2626";
+    const radius = state === "gas" ? 4 : 6;
+
+    particles.forEach((p) => {
+      ctx.beginPath();
+      ctx.arc(p.x * w, p.y * h, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    });
+  }
+
+  function setSpeed(state) {
+    const speed = state === "liquid" ? 0.003 : state === "gas" ? 0.012 : 0;
+    particles.forEach((p) => {
+      if (state !== "solid") {
+        const angle = Math.random() * Math.PI * 2;
+        p.vx = Math.cos(angle) * speed;
+        p.vy = Math.sin(angle) * speed;
+      }
+    });
+  }
+
+  let currentState = null;
+
+  function loop() {
+    const temp = Number(slider.value);
+    const state = getState(temp);
+    if (state !== currentState) {
+      currentState = state;
+      stateLabel.textContent = stateLabelText(state);
+      stateLabel.className = "state-label " + state;
+      setSpeed(state);
+    }
+    update(state);
+    draw(state);
+    requestAnimationFrame(loop);
+  }
+
+  slider.addEventListener("input", () => {
+    tempValue.textContent = `${slider.value}℃`;
+  });
+
+  tempValue.textContent = `${slider.value}℃`;
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>
