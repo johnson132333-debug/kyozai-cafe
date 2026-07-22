@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getAllMaterials, getOrderedSubjects, isStudentFacing } from "@/lib/materials";
 import { StudentGradeGrid } from "@/components/StudentGradeGrid";
 
@@ -9,7 +10,14 @@ export const metadata: Metadata = {
   description: "児童生徒が自分でタップして使える学習アプリのページです。",
 };
 
-export default function StudentsPage() {
+export default async function StudentsPage() {
+  // StudentGradeGrid reads ?grade=/&subject=/&unit= via useSearchParams so
+  // shared deep links resume at the right step. That only works during the
+  // server render (instead of falling back to an empty Suspense shell) if
+  // this route is dynamically rendered per request rather than statically
+  // prerendered once at build time.
+  await connection();
+
   const materials = getAllMaterials().filter(isStudentFacing);
   const subjects = getOrderedSubjects(materials);
 
