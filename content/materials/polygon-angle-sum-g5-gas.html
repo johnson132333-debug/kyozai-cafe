@@ -1,0 +1,1342 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>多角形の角の和を考えよう（クラス共有版・GAS連携）</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --cream:#FBF6EC;
+    --ink:#2E3440;
+    --sky:#4F8FBF;
+    --sky-dark:#376C96;
+    --clay:#E08A4E;
+    --clay-dark:#C06A2E;
+    --leaf:#6FA96B;
+    --leaf-dark:#4F8A4B;
+    --gold:#E8B84B;
+    --gold-dark:#C79626;
+    --send:#D9634C;
+    --send-dark:#B5432E;
+    --panel:#FFFFFF;
+    --line:#D9D2C2;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:"Hiragino Maru Gothic ProN","Yu Gothic",-apple-system,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    overflow:hidden;
+  }
+  #app{ width:100vw; height:100vh; position:relative; }
+
+  #title-screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:36px;
+    background:
+      radial-gradient(circle at 20% 20%, #FFF6E4 0%, transparent 45%),
+      radial-gradient(circle at 80% 80%, #E9F4FB 0%, transparent 45%),
+      var(--cream);
+  }
+  #title-screen h1{
+    font-size:clamp(28px, 5.5vw, 52px);
+    margin:0;
+    letter-spacing:.04em;
+    color:var(--sky-dark);
+    text-align:center;
+    text-shadow: 3px 3px 0 #fff;
+  }
+  #title-shape{ width:min(50vw,320px); }
+  #start-btn{
+    font-size:26px;
+    font-weight:700;
+    padding:18px 56px;
+    border:none;
+    border-radius:999px;
+    background:var(--clay);
+    color:#fff;
+    box-shadow:0 6px 0 var(--clay-dark);
+    cursor:pointer;
+    transition:transform .08s;
+  }
+  #start-btn:active{ transform:translateY(6px); box-shadow:0 0 0 var(--clay-dark); }
+
+  #work-screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    background:var(--cream);
+  }
+  header{
+    padding:14px 24px;
+    font-size:22px;
+    font-weight:700;
+    color:var(--sky-dark);
+    text-align:center;
+    background:var(--panel);
+    border-bottom:3px solid var(--line);
+    flex:0 0 auto;
+  }
+  #canvas-wrap{
+    flex:1 1 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:12px;
+    min-height:0;
+    position:relative;
+  }
+  #canvas{
+    width:100%;
+    height:100%;
+    max-width:900px;
+    background:#fff;
+    border:3px solid var(--line);
+    border-radius:18px;
+  }
+  .vertex{ cursor:pointer;
+    transition: all 0.15s ease-out; }
+  .vertex circle{ fill:#fff; stroke:var(--sky-dark); stroke-width:3; }
+  .vertex:hover circle{ fill:#E9F4FB; }
+  .vertex.chosen circle{ fill:var(--clay); stroke:var(--clay-dark); }
+  .vertex text{
+    font-size:15px; font-weight:700; fill:var(--sky-dark);
+    text-anchor:middle; dominant-baseline:middle; pointer-events:none;
+  }
+  .vertex.chosen text{ fill:#fff; }
+  .poly-outline{ fill:none; stroke:var(--sky-dark); stroke-width:3; }
+  .tri{ stroke:#fff; stroke-width:2; opacity:0.85; }
+
+  #result-panel{
+    position:absolute;
+    top:16px; left:50%; transform:translateX(-50%);
+    background:rgba(255,255,255,0.95);
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:10px 20px;
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
+    text-align:center;
+    box-shadow:0 4px 14px rgba(15,23,42,0.1);
+    display:none;
+  }
+  #result-panel .big{ font-size:22px; color:var(--clay-dark); }
+
+  #toolbar{
+    flex:0 0 auto;
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    flex-wrap:wrap;
+    padding:14px 16px;
+    background:var(--panel);
+    border-top:3px solid var(--line);
+  }
+  .tool-group{
+    display:flex;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:20px;
+    background:#F7F3EA;
+    border:2px solid var(--line);
+    align-items:center;
+  }
+  .tool-group .label{ font-size:12px; font-weight:700; color:#94a3b8; padding:0 4px; }
+  .poly-btn{
+    font-size:14px;
+    font-weight:700;
+    padding:9px 14px;
+    border:none;
+    border-radius:14px;
+    background:var(--leaf);
+    color:#fff;
+    box-shadow:0 4px 0 var(--leaf-dark);
+    cursor:pointer;
+    transition: all 0.15s ease-out;
+  }
+  .poly-btn:active{ transform:translateY(4px); box-shadow:0 0 0 var(--leaf-dark); }
+  .poly-btn.active{ background:var(--sky); box-shadow:0 4px 0 var(--sky-dark); }
+  .reset-btn{
+    font-size:14px;
+    font-weight:700;
+    padding:9px 14px;
+    border:none;
+    border-radius:14px;
+    background:var(--clay);
+    color:#fff;
+    box-shadow:0 4px 0 var(--clay-dark);
+    cursor:pointer;
+    transition: all 0.15s ease-out;
+  }
+  .reset-btn:active{ transform:translateY(4px); box-shadow:0 0 0 var(--clay-dark); }
+
+  #notes-section{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:10px 22px;
+    background:var(--panel);
+    border-top:3px solid var(--line);
+  }
+  #notes-label{ font-size:16px; font-weight:700; color:var(--sky-dark); white-space:nowrap; }
+  #notes-text{
+    flex:1 1 auto;
+    min-height:44px;
+    max-height:100px;
+    resize:vertical;
+    font-size:17px; line-height:1.6;
+    padding:10px 14px; border-radius:12px; border:2px solid var(--line);
+    font-family:inherit;
+    background:#FFFDF8;
+  }
+  #notes-text:focus{ outline:3px solid var(--gold); border-color:var(--gold-dark); }
+
+  #hint{
+    position:fixed;
+    bottom:170px; left:50%; transform:translateX(-50%);
+    background:rgba(46,52,64,0.85);
+    color:#fff;
+    padding:8px 18px;
+    border-radius:999px;
+    font-size:14px;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .3s;
+    text-align:center;
+    max-width:80vw;
+  }
+  #hint.show{ opacity:1; }
+
+  #send-section{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 22px 14px;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+  }
+  #name-input{
+    width:140px;
+    font-size:16px;
+    padding:9px 12px;
+    border-radius:12px;
+    border:2px solid var(--line);
+    font-family:inherit;
+    background:#FFFDF8;
+  }
+  #name-input:focus{ outline:3px solid var(--gold); border-color:var(--gold-dark); }
+  #send-btn{
+    display:flex; align-items:center; gap:6px;
+    font-size:16px; font-weight:700;
+    padding:10px 20px;
+    border:none; border-radius:14px;
+    background:var(--send);
+    color:#fff;
+    box-shadow:0 4px 0 var(--send-dark);
+    cursor:pointer;
+  }
+  #send-btn:active{ transform:translateY(4px); box-shadow:0 0 0 var(--send-dark); }
+  #send-btn:disabled{ opacity:0.6; cursor:default; transform:none; box-shadow:0 4px 0 var(--send-dark); }
+  #send-status{ font-size:14px; color:var(--sky-dark); font-weight:700; min-width:70px; }
+
+  button:focus-visible, [tabindex]:focus-visible, textarea:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  [hidden]{ display:none !important; }
+</style>
+
+<style>
+  #mode-toggle {
+    position: fixed; top: 10px; right: 10px; z-index: 999;
+    display: flex; gap: 6px;
+    background: rgba(255,255,255,0.9);
+    padding: 5px; border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(15,23,42,0.15);
+  }
+  #mode-toggle button {
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    font-size: 12px; font-weight: 700;
+    padding: 7px 12px; border: none; border-radius: 999px;
+    background: transparent; color: #64748b; cursor: pointer; white-space: nowrap;
+  }
+  #mode-toggle button.active { background: #2563eb; color: #fff; }
+
+  #code-mode {
+    position: absolute; inset: 0; overflow: auto;
+    background: #f3f6fb;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    color: #1f2937;
+    padding: 60px 24px 24px;
+  }
+  #code-mode .wrap { max-width: 760px; margin: 0 auto; }
+  #code-mode h1 { font-size: 20px; margin: 0 0 6px; text-align: center; }
+  #code-mode .sub { color: #64748b; font-size: 13px; margin-bottom: 8px; text-align: center; }
+  #code-mode .lead {
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px;
+    padding: 14px 16px; font-size: 13px; color: #1e3a8a; line-height: 1.7; margin-bottom: 24px;
+  }
+  #code-mode .lead code { background: #dbeafe; padding: 1px 5px; border-radius: 4px; }
+  #code-mode .file-nav { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
+  #code-mode .file-nav a {
+    display: block; padding: 8px 14px; border-radius: 999px; border: 2px solid #e2e8f0;
+    background: #fff; color: #334155; font-size: 13px; font-weight: 700; text-decoration: none;
+  }
+  #code-mode .file-nav a:hover { border-color: #93c5fd; color: #1d4ed8; }
+  #code-mode .file-section {
+    background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    margin-bottom: 24px; overflow: hidden; scroll-margin-top: 20px;
+  }
+  #code-mode .file-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 14px 18px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+  }
+  #code-mode .file-title { display: flex; align-items: center; gap: 8px; }
+  #code-mode .file-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%; background: #2563eb; color: #fff;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  #code-mode .file-name { font-weight: 700; font-size: 15px; color: #1e293b; }
+  #code-mode .file-desc { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  #code-mode .copy-btn {
+    flex-shrink: 0; padding: 8px 14px; font-size: 12px; font-weight: 700;
+    border: none; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer;
+    transition: background 0.15s;
+  }
+  #code-mode .copy-btn:hover { background: #1d4ed8; }
+  #code-mode .copy-btn.copied { background: #16a34a; }
+  #code-mode pre {
+    margin: 0; max-height: 380px; overflow: auto; background: #0f172a; color: #e2e8f0;
+    padding: 16px 18px; font-size: 12px; line-height: 1.6;
+  }
+  #code-mode pre.readme { background: #fffdf5; color: #334155; }
+  #code-mode code { font-family: "SFMono-Regular", Consolas, Menlo, monospace; white-space: pre; }
+</style>
+</head>
+<body>
+
+<div id="mode-toggle">
+  <button id="toggle-screen" class="active" type="button">🎮 実際の画面</button>
+  <button id="toggle-code" type="button">📋 コードをコピー（3ファイル）</button>
+</div>
+
+
+<div id="app">
+
+  <section id="title-screen">
+    <h1>多角形の角の和を<br>考えよう！</h1>
+    <svg id="title-shape" viewBox="0 0 300 200">
+      <polygon points="150,20 260,80 220,180 80,180 40,80"
+               fill="#7FB8DE" stroke="#2E5C7A" stroke-width="6" stroke-linejoin="round"/>
+      <line x1="150" y1="20" x2="220" y2="180" stroke="#fff" stroke-width="3"/>
+      <line x1="150" y1="20" x2="80" y2="180" stroke="#fff" stroke-width="3"/>
+    </svg>
+    <button id="start-btn">はじめる</button>
+  </section>
+
+  <section id="work-screen" hidden>
+    <header>多角形の角の和を考えよう</header>
+    <div id="canvas-wrap">
+      <svg id="canvas" viewBox="0 0 900 560"></svg>
+      <div id="result-panel"></div>
+    </div>
+    <div id="toolbar">
+      <div class="tool-group">
+        <span class="label">図形</span>
+        <button class="poly-btn" data-n="4">四角形</button>
+        <button class="poly-btn active" data-n="5">五角形</button>
+        <button class="poly-btn" data-n="6">六角形</button>
+        <button class="poly-btn" data-n="7">七角形</button>
+      </div>
+      <button class="reset-btn" id="reset-btn">↺ 頂点をえらびなおす</button>
+    </div>
+    <div id="notes-section">
+      <span id="notes-label">気づいたこと</span>
+      <textarea id="notes-text" placeholder="気づいたことを書いてみよう"></textarea>
+    </div>
+    <div id="send-section">
+      <input id="name-input" type="text" placeholder="なまえ" maxlength="20">
+      <button id="send-btn">📤 みんなに送る</button>
+      <span id="send-status"></span>
+    </div>
+  </section>
+
+  <div id="hint">頂点を1つタップしてみよう</div>
+
+  <canvas id="capture-canvas" width="1800" height="1120" style="display:none;"></canvas>
+</div>
+
+<script>
+(function(){
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const titleScreen = document.getElementById('title-screen');
+  const workScreen = document.getElementById('work-screen');
+  const startBtn = document.getElementById('start-btn');
+  const canvas = document.getElementById('canvas');
+  const resultPanel = document.getElementById('result-panel');
+  const hint = document.getElementById('hint');
+  const notesText = document.getElementById('notes-text');
+  const nameInput = document.getElementById('name-input');
+  const sendBtn = document.getElementById('send-btn');
+  const sendStatus = document.getElementById('send-status');
+  const captureCanvas = document.getElementById('capture-canvas');
+  const NAME_KEY = 'polygon-angle-name';
+  nameInput.value = safeGet(NAME_KEY) || '';
+  const polyButtons = document.querySelectorAll('.poly-btn');
+  const resetBtn = document.getElementById('reset-btn');
+
+  startBtn.addEventListener('click', () => {
+    titleScreen.hidden = true;
+    workScreen.hidden = false;
+    showHint('頂点を1つタップしてみよう', 3000);
+  });
+
+  function showHint(text, duration){
+    hint.textContent = text;
+    hint.classList.add('show');
+    if(duration){
+      clearTimeout(showHint._t);
+      showHint._t = setTimeout(() => hint.classList.remove('show'), duration);
+    }
+  }
+
+  const NOTES_KEY = 'polygon-angle-notes';
+  function safeGet(key){ try{ return localStorage.getItem(key); } catch(e){ return null; } }
+  function safeSet(key, val){ try{ localStorage.setItem(key, val); } catch(e){} }
+  let saveTimer = null;
+  notesText.value = safeGet(NOTES_KEY) || '';
+  notesText.addEventListener('input', () => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => safeSet(NOTES_KEY, notesText.value), 400);
+  });
+
+  const cx = 450, cy = 280, R = 210;
+  let n = 5;
+  let chosenIndex = null;
+  const colors = ['#7FB8DE', '#F4C177', '#B9D8A4', '#F0A6A6', '#C9B6E4'];
+
+  function vertexPos(i, count){
+    const angle = -90 + (i * 360) / count;
+    const rad = (angle * Math.PI) / 180;
+    return { x: cx + R * Math.cos(rad), y: cy + R * Math.sin(rad) };
+  }
+
+  function drawPolygon(){
+    canvas.innerHTML = '';
+    resultPanel.style.display = 'none';
+
+    const points = [];
+    for(let i = 0; i < n; i++) points.push(vertexPos(i, n));
+
+    if(chosenIndex !== null){
+      const triCount = n - 2;
+      let colorIdx = 0;
+      for(let i = 1; i < n - 1; i++){
+        const a = points[chosenIndex];
+        const b = points[(chosenIndex + i) % n];
+        const c = points[(chosenIndex + i + 1) % n];
+        const tri = document.createElementNS(svgNS, 'polygon');
+        tri.setAttribute('class', 'tri');
+        tri.setAttribute('points', `${a.x},${a.y} ${b.x},${b.y} ${c.x},${c.y}`);
+        tri.setAttribute('fill', colors[colorIdx % colors.length]);
+        canvas.appendChild(tri);
+        colorIdx++;
+      }
+    }
+
+    const outline = document.createElementNS(svgNS, 'polygon');
+    outline.setAttribute('class', 'poly-outline');
+    outline.setAttribute('points', points.map(p => `${p.x},${p.y}`).join(' '));
+    canvas.appendChild(outline);
+
+    points.forEach((p, i) => {
+      const g = document.createElementNS(svgNS, 'g');
+      g.setAttribute('class', 'vertex' + (i === chosenIndex ? ' chosen' : ''));
+      const c = document.createElementNS(svgNS, 'circle');
+      c.setAttribute('cx', p.x);
+      c.setAttribute('cy', p.y);
+      c.setAttribute('r', 18);
+      g.appendChild(c);
+      const t = document.createElementNS(svgNS, 'text');
+      t.setAttribute('x', p.x);
+      t.setAttribute('y', p.y + 1);
+      t.textContent = i + 1;
+      g.appendChild(t);
+      g.addEventListener('click', () => chooseVertex(i));
+      canvas.appendChild(g);
+    });
+
+    if(chosenIndex !== null){
+      const triCount = n - 2;
+      resultPanel.style.display = 'block';
+      resultPanel.innerHTML =
+        `三角形が <span class="big">${triCount}</span> こ できた → ` +
+        `角の合計 ＝ 180° × ${triCount} ＝ <span class="big">${180 * triCount}°</span>`;
+    }
+  }
+
+  function chooseVertex(i){
+    chosenIndex = i;
+    hint.classList.remove('show');
+    drawPolygon();
+  }
+
+  polyButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      n = Number(btn.dataset.n);
+      chosenIndex = null;
+      polyButtons.forEach((b) => b.classList.toggle('active', b === btn));
+      drawPolygon();
+      showHint('頂点を1つタップしてみよう', 2500);
+    });
+  });
+
+  resetBtn.addEventListener('click', () => {
+    chosenIndex = null;
+    drawPolygon();
+    showHint('頂点を1つタップしてみよう', 2500);
+  });
+
+  drawPolygon();
+  function notifyUser(text, duration){
+    if(typeof showHint === 'function'){ showHint(text, duration); return; }
+    sendStatus.textContent = text;
+    setTimeout(() => { sendStatus.textContent = ''; }, duration || 2500);
+  }
+
+  // ---------------- スライドに送る ----------------
+  function captureShapeImage(callback){
+    const clone = canvas.cloneNode(true);
+    if(typeof resultPanel !== 'undefined' && resultPanel && resultPanel.style.display !== 'none' && resultPanel.textContent.trim()){
+      const resultText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      resultText.setAttribute('x', '450');
+      resultText.setAttribute('y', '40');
+      resultText.setAttribute('text-anchor', 'middle');
+      resultText.setAttribute('font-size', '26');
+      resultText.setAttribute('font-weight', '700');
+      resultText.setAttribute('fill', '#C06A2E');
+      resultText.textContent = resultPanel.textContent.replace(/\s+/g, ' ').trim();
+      clone.appendChild(resultText);
+    }
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('width', '900');
+    clone.setAttribute('height', '560');
+    clone.querySelectorAll('.cut-marker, #cut-preview').forEach(el => el.remove());
+    clone.querySelectorAll('.shape').forEach(el => el.classList.remove('selected'));
+    const svgString = new XMLSerializer().serializeToString(clone);
+    const svgData = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+    const img = new Image();
+    img.onload = function(){
+      const ctx = captureCanvas.getContext('2d');
+      ctx.clearRect(0, 0, captureCanvas.width, captureCanvas.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, captureCanvas.width, captureCanvas.height);
+      ctx.drawImage(img, 0, 0, captureCanvas.width, captureCanvas.height);
+      const dataUrl = captureCanvas.toDataURL('image/png');
+      callback(dataUrl.split(',')[1]);
+    };
+    img.onerror = function(){ callback(null); };
+    img.src = svgData;
+  }
+
+  sendBtn.addEventListener('click', () => {
+    const name = nameInput.value.trim();
+    if(!name){
+      notifyUser('なまえを入力してね', 2500);
+      nameInput.focus();
+      return;
+    }
+    safeSet(NAME_KEY, name);
+    sendBtn.disabled = true;
+    sendStatus.textContent = '送信中…';
+
+    captureShapeImage(function(base64){
+      if(!base64){
+        sendStatus.textContent = '';
+        notifyUser('画像の作成に失敗しました', 2500);
+        sendBtn.disabled = false;
+        return;
+      }
+      if(typeof google !== 'undefined' && google.script && google.script.run){
+        google.script.run
+          .withSuccessHandler(function(){
+            sendStatus.textContent = '送りました！';
+            sendBtn.disabled = false;
+            setTimeout(() => { sendStatus.textContent = ''; }, 2500);
+          })
+          .withFailureHandler(function(){
+            sendStatus.textContent = '';
+            notifyUser('送信に失敗しました。もう一度試してね', 3000);
+            sendBtn.disabled = false;
+          })
+          .sendToSlide({ name: name, notes: notesText.value, imageBase64: base64 });
+      } else {
+        sendStatus.textContent = '';
+        notifyUser('この機能はGoogleスライド版として配布したときだけ使えます', 3200);
+        sendBtn.disabled = false;
+      }
+    });
+  });
+})();
+</script>
+
+
+<div id="code-mode" hidden>
+  <div class="wrap">
+    <h1>多角形の角の和を考えよう</h1>
+    <div class="sub">Google Apps Script デプロイ用ファイル一式</div>
+
+    <div class="lead">
+      クラス共有版（児童の考えをGoogleスライドに集約する機能つき）を
+      Google Apps Scriptにデプロイするための3つのファイルです。
+      それぞれの「コピー」ボタンで個別にコピーし、
+      <code>③ README.txt</code> の手順に沿って <code>script.google.com</code> に貼り付けてください。
+    </div>
+
+    <nav class="file-nav">
+      <a href="#file-index">① index.html</a>
+      <a href="#file-gs">② Code.gs</a>
+      <a href="#file-readme">③ README.txt（手順）</a>
+    </nav>
+
+    <section class="file-section" id="file-index">
+      <div class="file-header">
+        <div class="file-title">
+          <span class="file-badge">1</span>
+          <div>
+            <div class="file-name">index.html</div>
+            <div class="file-desc">児童が触る画面本体（左の「🎮 実際の画面」で動作を確認できます）</div>
+          </div>
+        </div>
+        <button class="copy-btn" data-target="code-index" type="button">コピー</button>
+      </div>
+      <pre><code id="code-index">&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+&lt;title&gt;多角形の角の和を考えよう&lt;/title&gt;
+&lt;style&gt;
+  :root{
+    --cream:#FBF6EC;
+    --ink:#2E3440;
+    --sky:#4F8FBF;
+    --sky-dark:#376C96;
+    --clay:#E08A4E;
+    --clay-dark:#C06A2E;
+    --leaf:#6FA96B;
+    --leaf-dark:#4F8A4B;
+    --gold:#E8B84B;
+    --gold-dark:#C79626;
+    --send:#D9634C;
+    --send-dark:#B5432E;
+    --panel:#FFFFFF;
+    --line:#D9D2C2;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:"Hiragino Maru Gothic ProN","Yu Gothic",-apple-system,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    overflow:hidden;
+  }
+  #app{ width:100vw; height:100vh; position:relative; }
+
+  #title-screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:36px;
+    background:
+      radial-gradient(circle at 20% 20%, #FFF6E4 0%, transparent 45%),
+      radial-gradient(circle at 80% 80%, #E9F4FB 0%, transparent 45%),
+      var(--cream);
+  }
+  #title-screen h1{
+    font-size:clamp(28px, 5.5vw, 52px);
+    margin:0;
+    letter-spacing:.04em;
+    color:var(--sky-dark);
+    text-align:center;
+    text-shadow: 3px 3px 0 #fff;
+  }
+  #title-shape{ width:min(50vw,320px); }
+  #start-btn{
+    font-size:26px;
+    font-weight:700;
+    padding:18px 56px;
+    border:none;
+    border-radius:999px;
+    background:var(--clay);
+    color:#fff;
+    box-shadow:0 6px 0 var(--clay-dark);
+    cursor:pointer;
+    transition:transform .08s;
+  }
+  #start-btn:active{ transform:translateY(6px); box-shadow:0 0 0 var(--clay-dark); }
+
+  #work-screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    background:var(--cream);
+  }
+  header{
+    padding:14px 24px;
+    font-size:22px;
+    font-weight:700;
+    color:var(--sky-dark);
+    text-align:center;
+    background:var(--panel);
+    border-bottom:3px solid var(--line);
+    flex:0 0 auto;
+  }
+  #canvas-wrap{
+    flex:1 1 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:12px;
+    min-height:0;
+    position:relative;
+  }
+  #canvas{
+    width:100%;
+    height:100%;
+    max-width:900px;
+    background:#fff;
+    border:3px solid var(--line);
+    border-radius:18px;
+  }
+  .vertex{ cursor:pointer;
+    transition: all 0.15s ease-out; }
+  .vertex circle{ fill:#fff; stroke:var(--sky-dark); stroke-width:3; }
+  .vertex:hover circle{ fill:#E9F4FB; }
+  .vertex.chosen circle{ fill:var(--clay); stroke:var(--clay-dark); }
+  .vertex text{
+    font-size:15px; font-weight:700; fill:var(--sky-dark);
+    text-anchor:middle; dominant-baseline:middle; pointer-events:none;
+  }
+  .vertex.chosen text{ fill:#fff; }
+  .poly-outline{ fill:none; stroke:var(--sky-dark); stroke-width:3; }
+  .tri{ stroke:#fff; stroke-width:2; opacity:0.85; }
+
+  #result-panel{
+    position:absolute;
+    top:16px; left:50%; transform:translateX(-50%);
+    background:rgba(255,255,255,0.95);
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:10px 20px;
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
+    text-align:center;
+    box-shadow:0 4px 14px rgba(15,23,42,0.1);
+    display:none;
+  }
+  #result-panel .big{ font-size:22px; color:var(--clay-dark); }
+
+  #toolbar{
+    flex:0 0 auto;
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    flex-wrap:wrap;
+    padding:14px 16px;
+    background:var(--panel);
+    border-top:3px solid var(--line);
+  }
+  .tool-group{
+    display:flex;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:20px;
+    background:#F7F3EA;
+    border:2px solid var(--line);
+    align-items:center;
+  }
+  .tool-group .label{ font-size:12px; font-weight:700; color:#94a3b8; padding:0 4px; }
+  .poly-btn{
+    font-size:14px;
+    font-weight:700;
+    padding:9px 14px;
+    border:none;
+    border-radius:14px;
+    background:var(--leaf);
+    color:#fff;
+    box-shadow:0 4px 0 var(--leaf-dark);
+    cursor:pointer;
+    transition: all 0.15s ease-out;
+  }
+  .poly-btn:active{ transform:translateY(4px); box-shadow:0 0 0 var(--leaf-dark); }
+  .poly-btn.active{ background:var(--sky); box-shadow:0 4px 0 var(--sky-dark); }
+  .reset-btn{
+    font-size:14px;
+    font-weight:700;
+    padding:9px 14px;
+    border:none;
+    border-radius:14px;
+    background:var(--clay);
+    color:#fff;
+    box-shadow:0 4px 0 var(--clay-dark);
+    cursor:pointer;
+    transition: all 0.15s ease-out;
+  }
+  .reset-btn:active{ transform:translateY(4px); box-shadow:0 0 0 var(--clay-dark); }
+
+  #notes-section{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:10px 22px;
+    background:var(--panel);
+    border-top:3px solid var(--line);
+  }
+  #notes-label{ font-size:16px; font-weight:700; color:var(--sky-dark); white-space:nowrap; }
+  #notes-text{
+    flex:1 1 auto;
+    min-height:44px;
+    max-height:100px;
+    resize:vertical;
+    font-size:17px; line-height:1.6;
+    padding:10px 14px; border-radius:12px; border:2px solid var(--line);
+    font-family:inherit;
+    background:#FFFDF8;
+  }
+  #notes-text:focus{ outline:3px solid var(--gold); border-color:var(--gold-dark); }
+
+  #hint{
+    position:fixed;
+    bottom:170px; left:50%; transform:translateX(-50%);
+    background:rgba(46,52,64,0.85);
+    color:#fff;
+    padding:8px 18px;
+    border-radius:999px;
+    font-size:14px;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .3s;
+    text-align:center;
+    max-width:80vw;
+  }
+  #hint.show{ opacity:1; }
+
+  #send-section{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 22px 14px;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+  }
+  #name-input{
+    width:140px;
+    font-size:16px;
+    padding:9px 12px;
+    border-radius:12px;
+    border:2px solid var(--line);
+    font-family:inherit;
+    background:#FFFDF8;
+  }
+  #name-input:focus{ outline:3px solid var(--gold); border-color:var(--gold-dark); }
+  #send-btn{
+    display:flex; align-items:center; gap:6px;
+    font-size:16px; font-weight:700;
+    padding:10px 20px;
+    border:none; border-radius:14px;
+    background:var(--send);
+    color:#fff;
+    box-shadow:0 4px 0 var(--send-dark);
+    cursor:pointer;
+  }
+  #send-btn:active{ transform:translateY(4px); box-shadow:0 0 0 var(--send-dark); }
+  #send-btn:disabled{ opacity:0.6; cursor:default; transform:none; box-shadow:0 4px 0 var(--send-dark); }
+  #send-status{ font-size:14px; color:var(--sky-dark); font-weight:700; min-width:70px; }
+
+  button:focus-visible, [tabindex]:focus-visible, textarea:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  [hidden]{ display:none !important; }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id="app"&gt;
+
+  &lt;section id="title-screen"&gt;
+    &lt;h1&gt;多角形の角の和を&lt;br&gt;考えよう！&lt;/h1&gt;
+    &lt;svg id="title-shape" viewBox="0 0 300 200"&gt;
+      &lt;polygon points="150,20 260,80 220,180 80,180 40,80"
+               fill="#7FB8DE" stroke="#2E5C7A" stroke-width="6" stroke-linejoin="round"/&gt;
+      &lt;line x1="150" y1="20" x2="220" y2="180" stroke="#fff" stroke-width="3"/&gt;
+      &lt;line x1="150" y1="20" x2="80" y2="180" stroke="#fff" stroke-width="3"/&gt;
+    &lt;/svg&gt;
+    &lt;button id="start-btn"&gt;はじめる&lt;/button&gt;
+  &lt;/section&gt;
+
+  &lt;section id="work-screen" hidden&gt;
+    &lt;header&gt;多角形の角の和を考えよう&lt;/header&gt;
+    &lt;div id="canvas-wrap"&gt;
+      &lt;svg id="canvas" viewBox="0 0 900 560"&gt;&lt;/svg&gt;
+      &lt;div id="result-panel"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div id="toolbar"&gt;
+      &lt;div class="tool-group"&gt;
+        &lt;span class="label"&gt;図形&lt;/span&gt;
+        &lt;button class="poly-btn" data-n="4"&gt;四角形&lt;/button&gt;
+        &lt;button class="poly-btn active" data-n="5"&gt;五角形&lt;/button&gt;
+        &lt;button class="poly-btn" data-n="6"&gt;六角形&lt;/button&gt;
+        &lt;button class="poly-btn" data-n="7"&gt;七角形&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;button class="reset-btn" id="reset-btn"&gt;↺ 頂点をえらびなおす&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div id="notes-section"&gt;
+      &lt;span id="notes-label"&gt;気づいたこと&lt;/span&gt;
+      &lt;textarea id="notes-text" placeholder="気づいたことを書いてみよう"&gt;&lt;/textarea&gt;
+    &lt;/div&gt;
+    &lt;div id="send-section"&gt;
+      &lt;input id="name-input" type="text" placeholder="なまえ" maxlength="20"&gt;
+      &lt;button id="send-btn"&gt;📤 みんなに送る&lt;/button&gt;
+      &lt;span id="send-status"&gt;&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;div id="hint"&gt;頂点を1つタップしてみよう&lt;/div&gt;
+
+  &lt;canvas id="capture-canvas" width="1800" height="1120" style="display:none;"&gt;&lt;/canvas&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+(function(){
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const titleScreen = document.getElementById('title-screen');
+  const workScreen = document.getElementById('work-screen');
+  const startBtn = document.getElementById('start-btn');
+  const canvas = document.getElementById('canvas');
+  const resultPanel = document.getElementById('result-panel');
+  const hint = document.getElementById('hint');
+  const notesText = document.getElementById('notes-text');
+  const nameInput = document.getElementById('name-input');
+  const sendBtn = document.getElementById('send-btn');
+  const sendStatus = document.getElementById('send-status');
+  const captureCanvas = document.getElementById('capture-canvas');
+  const NAME_KEY = 'polygon-angle-name';
+  nameInput.value = safeGet(NAME_KEY) || '';
+  const polyButtons = document.querySelectorAll('.poly-btn');
+  const resetBtn = document.getElementById('reset-btn');
+
+  startBtn.addEventListener('click', () =&gt; {
+    titleScreen.hidden = true;
+    workScreen.hidden = false;
+    showHint('頂点を1つタップしてみよう', 3000);
+  });
+
+  function showHint(text, duration){
+    hint.textContent = text;
+    hint.classList.add('show');
+    if(duration){
+      clearTimeout(showHint._t);
+      showHint._t = setTimeout(() =&gt; hint.classList.remove('show'), duration);
+    }
+  }
+
+  const NOTES_KEY = 'polygon-angle-notes';
+  function safeGet(key){ try{ return localStorage.getItem(key); } catch(e){ return null; } }
+  function safeSet(key, val){ try{ localStorage.setItem(key, val); } catch(e){} }
+  let saveTimer = null;
+  notesText.value = safeGet(NOTES_KEY) || '';
+  notesText.addEventListener('input', () =&gt; {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() =&gt; safeSet(NOTES_KEY, notesText.value), 400);
+  });
+
+  const cx = 450, cy = 280, R = 210;
+  let n = 5;
+  let chosenIndex = null;
+  const colors = ['#7FB8DE', '#F4C177', '#B9D8A4', '#F0A6A6', '#C9B6E4'];
+
+  function vertexPos(i, count){
+    const angle = -90 + (i * 360) / count;
+    const rad = (angle * Math.PI) / 180;
+    return { x: cx + R * Math.cos(rad), y: cy + R * Math.sin(rad) };
+  }
+
+  function drawPolygon(){
+    canvas.innerHTML = '';
+    resultPanel.style.display = 'none';
+
+    const points = [];
+    for(let i = 0; i &lt; n; i++) points.push(vertexPos(i, n));
+
+    if(chosenIndex !== null){
+      const triCount = n - 2;
+      let colorIdx = 0;
+      for(let i = 1; i &lt; n - 1; i++){
+        const a = points[chosenIndex];
+        const b = points[(chosenIndex + i) % n];
+        const c = points[(chosenIndex + i + 1) % n];
+        const tri = document.createElementNS(svgNS, 'polygon');
+        tri.setAttribute('class', 'tri');
+        tri.setAttribute('points', `${a.x},${a.y} ${b.x},${b.y} ${c.x},${c.y}`);
+        tri.setAttribute('fill', colors[colorIdx % colors.length]);
+        canvas.appendChild(tri);
+        colorIdx++;
+      }
+    }
+
+    const outline = document.createElementNS(svgNS, 'polygon');
+    outline.setAttribute('class', 'poly-outline');
+    outline.setAttribute('points', points.map(p =&gt; `${p.x},${p.y}`).join(' '));
+    canvas.appendChild(outline);
+
+    points.forEach((p, i) =&gt; {
+      const g = document.createElementNS(svgNS, 'g');
+      g.setAttribute('class', 'vertex' + (i === chosenIndex ? ' chosen' : ''));
+      const c = document.createElementNS(svgNS, 'circle');
+      c.setAttribute('cx', p.x);
+      c.setAttribute('cy', p.y);
+      c.setAttribute('r', 18);
+      g.appendChild(c);
+      const t = document.createElementNS(svgNS, 'text');
+      t.setAttribute('x', p.x);
+      t.setAttribute('y', p.y + 1);
+      t.textContent = i + 1;
+      g.appendChild(t);
+      g.addEventListener('click', () =&gt; chooseVertex(i));
+      canvas.appendChild(g);
+    });
+
+    if(chosenIndex !== null){
+      const triCount = n - 2;
+      resultPanel.style.display = 'block';
+      resultPanel.innerHTML =
+        `三角形が &lt;span class="big"&gt;${triCount}&lt;/span&gt; こ できた → ` +
+        `角の合計 ＝ 180° × ${triCount} ＝ &lt;span class="big"&gt;${180 * triCount}°&lt;/span&gt;`;
+    }
+  }
+
+  function chooseVertex(i){
+    chosenIndex = i;
+    hint.classList.remove('show');
+    drawPolygon();
+  }
+
+  polyButtons.forEach((btn) =&gt; {
+    btn.addEventListener('click', () =&gt; {
+      n = Number(btn.dataset.n);
+      chosenIndex = null;
+      polyButtons.forEach((b) =&gt; b.classList.toggle('active', b === btn));
+      drawPolygon();
+      showHint('頂点を1つタップしてみよう', 2500);
+    });
+  });
+
+  resetBtn.addEventListener('click', () =&gt; {
+    chosenIndex = null;
+    drawPolygon();
+    showHint('頂点を1つタップしてみよう', 2500);
+  });
+
+  drawPolygon();
+  function notifyUser(text, duration){
+    if(typeof showHint === 'function'){ showHint(text, duration); return; }
+    sendStatus.textContent = text;
+    setTimeout(() =&gt; { sendStatus.textContent = ''; }, duration || 2500);
+  }
+
+  // ---------------- スライドに送る ----------------
+  function captureShapeImage(callback){
+    const clone = canvas.cloneNode(true);
+    if(typeof resultPanel !== 'undefined' &amp;&amp; resultPanel &amp;&amp; resultPanel.style.display !== 'none' &amp;&amp; resultPanel.textContent.trim()){
+      const resultText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      resultText.setAttribute('x', '450');
+      resultText.setAttribute('y', '40');
+      resultText.setAttribute('text-anchor', 'middle');
+      resultText.setAttribute('font-size', '26');
+      resultText.setAttribute('font-weight', '700');
+      resultText.setAttribute('fill', '#C06A2E');
+      resultText.textContent = resultPanel.textContent.replace(/\s+/g, ' ').trim();
+      clone.appendChild(resultText);
+    }
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('width', '900');
+    clone.setAttribute('height', '560');
+    clone.querySelectorAll('.cut-marker, #cut-preview').forEach(el =&gt; el.remove());
+    clone.querySelectorAll('.shape').forEach(el =&gt; el.classList.remove('selected'));
+    const svgString = new XMLSerializer().serializeToString(clone);
+    const svgData = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+    const img = new Image();
+    img.onload = function(){
+      const ctx = captureCanvas.getContext('2d');
+      ctx.clearRect(0, 0, captureCanvas.width, captureCanvas.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, captureCanvas.width, captureCanvas.height);
+      ctx.drawImage(img, 0, 0, captureCanvas.width, captureCanvas.height);
+      const dataUrl = captureCanvas.toDataURL('image/png');
+      callback(dataUrl.split(',')[1]);
+    };
+    img.onerror = function(){ callback(null); };
+    img.src = svgData;
+  }
+
+  sendBtn.addEventListener('click', () =&gt; {
+    const name = nameInput.value.trim();
+    if(!name){
+      notifyUser('なまえを入力してね', 2500);
+      nameInput.focus();
+      return;
+    }
+    safeSet(NAME_KEY, name);
+    sendBtn.disabled = true;
+    sendStatus.textContent = '送信中…';
+
+    captureShapeImage(function(base64){
+      if(!base64){
+        sendStatus.textContent = '';
+        notifyUser('画像の作成に失敗しました', 2500);
+        sendBtn.disabled = false;
+        return;
+      }
+      if(typeof google !== 'undefined' &amp;&amp; google.script &amp;&amp; google.script.run){
+        google.script.run
+          .withSuccessHandler(function(){
+            sendStatus.textContent = '送りました！';
+            sendBtn.disabled = false;
+            setTimeout(() =&gt; { sendStatus.textContent = ''; }, 2500);
+          })
+          .withFailureHandler(function(){
+            sendStatus.textContent = '';
+            notifyUser('送信に失敗しました。もう一度試してね', 3000);
+            sendBtn.disabled = false;
+          })
+          .sendToSlide({ name: name, notes: notesText.value, imageBase64: base64 });
+      } else {
+        sendStatus.textContent = '';
+        notifyUser('この機能はGoogleスライド版として配布したときだけ使えます', 3200);
+        sendBtn.disabled = false;
+      }
+    });
+  });
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+    </section>
+
+    <section class="file-section" id="file-gs">
+      <div class="file-header">
+        <div class="file-title">
+          <span class="file-badge">2</span>
+          <div>
+            <div class="file-name">Code.gs</div>
+            <div class="file-desc">Googleスライドへの書き込みを行うバックエンド処理</div>
+          </div>
+        </div>
+        <button class="copy-btn" data-target="code-gs" type="button">コピー</button>
+      </div>
+      <pre><code id="code-gs">/**
+ * 「多角形の角の和を考えよう」 - みんなの考えをスライドに送る機能
+ *
+ * 使い方（デプロイ手順）は README.txt を参照してください。
+ */
+
+function doGet(e) {
+  return HtmlService.createTemplateFromFile('index')
+    .evaluate()
+    .setTitle('多角形の角の和を考えよう')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/**
+ * 共有プレゼンテーションを取得する。まだ無ければ新規作成して
+ * スクリプトプロパティにIDを保存し、以後はそのファイルに追記していく。
+ */
+function getOrCreatePresentation_() {
+  const props = PropertiesService.getScriptProperties();
+  const savedId = props.getProperty('PRESENTATION_ID');
+
+  if (savedId) {
+    try {
+      return SlidesApp.openById(savedId);
+    } catch (err) {
+      // 保存されていたIDが無効な場合は作り直す
+    }
+  }
+
+  const presentation = SlidesApp.create('多角形の角の和を考えよう - みんなの考え');
+  props.setProperty('PRESENTATION_ID', presentation.getId());
+  return presentation;
+}
+
+/**
+ * フロント側から google.script.run 経由で呼ばれる。
+ * data = { name: string, notes: string, imageBase64: string(PNGのbase64、data:プレフィックスなし) }
+ */
+function sendToSlide(data) {
+  if (!data || !data.imageBase64) {
+    throw new Error('画像データがありません');
+  }
+
+  const presentation = getOrCreatePresentation_();
+  const pageWidth = presentation.getPageWidth();
+  const pageHeight = presentation.getPageHeight();
+
+  const slide = presentation.appendSlide(SlidesApp.PredefinedLayout.BLANK);
+
+  // --- なまえ ---
+  const name = (data.name || '名前なし').toString().slice(0, 40);
+  const nameBox = slide.insertTextBox(name, 24, 16, pageWidth - 48, 36);
+  const nameStyle = nameBox.getText().getTextStyle();
+  nameStyle.setFontSize(18);
+  nameStyle.setBold(true);
+  nameStyle.setForegroundColor('#376C96');
+
+  // --- 図形の画像 ---
+  const imageBlob = Utilities.newBlob(
+    Utilities.base64Decode(data.imageBase64),
+    'image/png',
+    'shape.png'
+  );
+  const image = slide.insertImage(imageBlob);
+
+  const maxW = pageWidth * 0.72;
+  const maxH = pageHeight * 0.55;
+  const scale = Math.min(maxW / image.getWidth(), maxH / image.getHeight(), 1);
+  const newW = image.getWidth() * scale;
+  const newH = image.getHeight() * scale;
+  image.setWidth(newW);
+  image.setHeight(newH);
+  image.setLeft((pageWidth - newW) / 2);
+  image.setTop(60);
+
+  // --- 気づいたこと ---
+  const notes = (data.notes || '').toString().slice(0, 500);
+  if (notes) {
+    const notesTop = image.getTop() + newH + 16;
+    const notesHeight = Math.max(pageHeight - notesTop - 20, 40);
+    const notesBox = slide.insertTextBox(notes, 24, notesTop, pageWidth - 48, notesHeight);
+    const notesStyle = notesBox.getText().getTextStyle();
+    notesStyle.setFontSize(14);
+  }
+
+  return {
+    ok: true,
+    slideUrl: 'https://docs.google.com/presentation/d/' + presentation.getId() + '/edit'
+  };
+}
+</code></pre>
+    </section>
+
+    <section class="file-section" id="file-readme">
+      <div class="file-header">
+        <div class="file-title">
+          <span class="file-badge">3</span>
+          <div>
+            <div class="file-name">README.txt（デプロイ手順）</div>
+            <div class="file-desc">script.google.com への貼り付け方・公開方法</div>
+          </div>
+        </div>
+        <button class="copy-btn" data-target="code-readme" type="button">コピー</button>
+      </div>
+      <pre class="readme"><code id="code-readme">「多角形の角の和を考えよう」 Googleスライド送信版 - デプロイ手順
+====================================================
+
+このフォルダには3つのファイルがあります。
+・index.html … 児童が触る画面（オフライン版に「なまえ」欄と「送る」ボタンを追加したもの）
+・Code.gs     … Googleスライドにデータを送るためのバックエンド処理
+・README.txt  … このファイル
+
+【1】Google Apps Script プロジェクトを作る
+  1. Google ドライブを開く（学校アカウントでログイン）
+  2. 「新規」→「その他」→「Google Apps Script」
+     （見当たらない場合は https://script.google.com/ から「新しいプロジェクト」）
+  3. プロジェクト名を「多角形の角の和を考えよう」などにする
+
+【2】コードを貼り付ける
+  1. 左側のファイル一覧にある「Code.gs」を開き、中身をすべて削除
+  2. 渡した Code.gs の内容をすべて貼り付けて保存（Ctrl+S）
+  3. 左側の「＋」→「HTML」を選び、ファイル名を必ず「index」にする（拡張子は自動でつきます）
+  4. 渡した index.html の内容をすべて貼り付けて保存
+
+【3】ウェブアプリとして公開する
+  1. 右上の「デプロイ」→「新しいデプロイ」
+  2. 種類の選択（歯車マーク）で「ウェブアプリ」を選ぶ
+  3. 「次のユーザーとして実行」→ 自分（先生のアカウント）
+  4. 「アクセスできるユーザー」→ 学校のドメイン内の全員
+     （例：kita9.ed.jp 内の全員、など。学校のGoogle Workspace設定に合わせてください）
+  5. 「デプロイ」をクリックし、表示されたウェブアプリのURLをコピーする
+  6. 初回のみ、権限の承認画面が出るので許可する
+
+【4】児童に配布する
+  ・コピーしたURLをブックマークやGoogle Classroom等で共有すれば、
+    Chromebookのブラウザからそのまま使えます。
+
+【5】スライドの確認
+  ・誰かが初めて「送る」を押したときに、自動で
+    「多角形の角の和を考えよう - みんなの考え」という
+    Googleスライドのプレゼンテーションがドライブに作成されます。
+  ・以降の送信は、そのスライドに1人1枚ずつ追加されていきます。
+  ・スライドの共有設定（誰が見られるか）は、作成後にドライブから
+    先生が調整してください（デフォルトは先生のみ閲覧可）。
+
+【困ったときは】
+  ・貼り付けたコードを直接書き換えても大丈夫です。次に相談するときは
+    「Code.gsの◯◯を直したい」のように伝えてもらえれば調整できます。
+</code></pre>
+    </section>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const target = document.getElementById(btn.dataset.target);
+      try {
+        await navigator.clipboard.writeText(target.textContent);
+        const original = btn.textContent;
+        btn.textContent = 'コピーしました！';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      } catch (e) {
+        console.error('Copy failed', e);
+      }
+    });
+  });
+
+  (function(){
+    const appEl = document.getElementById('app');
+    const codeEl = document.getElementById('code-mode');
+    const btnScreen = document.getElementById('toggle-screen');
+    const btnCode = document.getElementById('toggle-code');
+
+    btnScreen.addEventListener('click', () => {
+      appEl.hidden = false;
+      codeEl.hidden = true;
+      btnScreen.classList.add('active');
+      btnCode.classList.remove('active');
+    });
+    btnCode.addEventListener('click', () => {
+      appEl.hidden = true;
+      codeEl.hidden = false;
+      btnCode.classList.add('active');
+      btnScreen.classList.remove('active');
+    });
+  })();
+</script>
+</body>
+</html>
