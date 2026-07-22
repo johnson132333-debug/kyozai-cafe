@@ -7,6 +7,10 @@
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
   body {
     margin: 0;
     font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
@@ -47,6 +51,7 @@
     border: 2px solid #cbd5e1;
     background: #f8fafc;
     cursor: pointer;
+    transition: all 0.15s ease-out;
     font-weight: 600;
   }
   .pattern-buttons button.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
@@ -63,6 +68,7 @@
     background: #16a34a;
     color: white;
     cursor: pointer;
+    transition: all 0.15s ease-out;
   }
   .toggle-btn.stop { background: #dc2626; }
 </style>

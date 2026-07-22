@@ -7,6 +7,10 @@
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
   body {
     margin: 0;
     font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
@@ -62,6 +66,7 @@
     border: 2px solid #cbd5e1;
     background: #f8fafc;
     cursor: pointer;
+    transition: all 0.15s ease-out;
     font-weight: 600;
   }
   .custom-row { display: flex; gap: 8px; margin-bottom: 18px; align-items: center; justify-content: center; }
@@ -81,6 +86,7 @@
     color: white;
     font-size: 13px;
     cursor: pointer;
+    transition: all 0.15s ease-out;
   }
   .controls { display: flex; gap: 10px; }
   .controls button {
@@ -91,6 +97,7 @@
     border: none;
     border-radius: 12px;
     cursor: pointer;
+    transition: all 0.15s ease-out;
   }
   .start-btn { background: #16a34a; color: white; }
   .start-btn:disabled { background: #cbd5e1; }

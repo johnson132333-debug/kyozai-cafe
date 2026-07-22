@@ -7,6 +7,10 @@
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
   body {
     margin: 0;
     font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
@@ -77,6 +81,7 @@
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
+    transition: all 0.15s ease-out;
   }
   .choice:hover { border-color: #93c5fd; }
   .choice.correct { border-color: #16a34a; background: #dcfce7; }
@@ -94,6 +99,7 @@
     background: #2563eb;
     color: white;
     cursor: pointer;
+    transition: all 0.15s ease-out;
   }
   button.primary:disabled { background: #cbd5e1; cursor: not-allowed; }
   .result { font-size: 16px; line-height: 1.7; text-align: center; }

@@ -7,6 +7,10 @@
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
   body {
     margin: 0;
     font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
@@ -65,6 +69,7 @@
     background: #2563eb;
     color: white;
     cursor: pointer;
+    transition: all 0.15s ease-out;
     margin-bottom: 18px;
   }
   .groups {
