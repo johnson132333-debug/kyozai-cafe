@@ -5,6 +5,6 @@
   "unit": "図形の面積",
   "grade": "小学5年",
   "studentFacing": false,
-  "description": "「台形の面積を考えよう」をクラス全体で共有できるようにする、Google Apps Scriptデプロイ用のファイル一式です。「①index.html（なまえ欄＋送るボタンつきの画面本体）」「②Code.gs（Googleスライドへの書き込み処理）」「③README.txt（デプロイ手順）」の3つを見出しごとに分けて掲載しており、それぞれに個別の「コピー」ボタンがあります。手順どおりにscript.google.comへ貼り付ければ、児童が組み替えた図形と気づいたことをGoogleスライドに集約できるようになります。",
+  "description": "「台形の面積を考えよう」をクラス全体で共有できるようにする、Google Apps Scriptデプロイ用の教材です。右上の切り替えボタンで「🎮 実際の画面」（児童が触る画面をそのまま試せます。送信ボタンはGoogle Apps Scriptとして配信した環境でのみ動作します）と「📋 コードをコピー（3ファイル）」（①index.html②Code.gs③README.txtを個別にコピーできる一覧）を行き来できます。手順どおりにscript.google.comへ貼り付ければ、児童が組み替えた図形と気づいたことをGoogleスライドに集約できるようになります。",
   "tags": ["台形", "面積", "図形", "算数", "Google Apps Script", "クラス共有"]
 }
