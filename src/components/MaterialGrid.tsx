@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import type { Material } from "@/lib/materials";
-import type { GradeBand } from "@/lib/grades";
-import { GRADE_BANDS, getGradeBands } from "@/lib/grades";
+import { getOrderedGrades } from "@/lib/grades";
+import { GRADE_STYLES, GRADE_ICONS, GRADE_LABELS, DEFAULT_GRADE_STYLE } from "@/lib/gradeDisplay";
 import { MaterialCard } from "./MaterialCard";
 
 type MaterialGridProps = {
@@ -21,22 +21,29 @@ function groupByUnit(items: Material[]): [string, Material[]][] {
 }
 
 export function MaterialGrid({ materials, subjects }: MaterialGridProps) {
+  const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [query, setQuery] = useState("");
-  const [gradeBand, setGradeBand] = useState<GradeBand | null>(null);
+
+  const grades = useMemo(() => getOrderedGrades(materials.map((m) => m.grade)), [materials]);
+
+  const gradeFiltered = useMemo(() => {
+    if (showAll || !selectedGrade) return materials;
+    return materials.filter((m) => m.grade === selectedGrade || m.grade === "全学年");
+  }, [materials, selectedGrade, showAll]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return materials.filter((m) => {
-      const matchesGrade = !gradeBand || getGradeBands(m.grade).includes(gradeBand);
-      const matchesQuery =
-        !q ||
+    return gradeFiltered.filter((m) => {
+      if (!q) return true;
+      return (
         m.title.toLowerCase().includes(q) ||
         m.description.toLowerCase().includes(q) ||
         m.unit.toLowerCase().includes(q) ||
-        m.tags.some((tag) => tag.toLowerCase().includes(q));
-      return matchesGrade && matchesQuery;
+        m.tags.some((tag) => tag.toLowerCase().includes(q))
+      );
     });
-  }, [materials, query, gradeBand]);
+  }, [gradeFiltered, query]);
 
   const bySubject = useMemo(() => {
     const map = new Map<string, Material[]>();
@@ -49,9 +56,59 @@ export function MaterialGrid({ materials, subjects }: MaterialGridProps) {
 
   const visibleSubjects = subjects.filter((s) => (bySubject.get(s)?.length ?? 0) > 0);
 
+  if (!selectedGrade && !showAll) {
+    return (
+      <div>
+        <p className="mb-6 text-center text-base font-bold text-slate-700 dark:text-slate-300">
+          担当学年を選んでください
+        </p>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {grades.map((grade) => (
+            <button
+              key={grade}
+              type="button"
+              onClick={() => setSelectedGrade(grade)}
+              className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-8 text-center transition hover:scale-[1.03] active:scale-[0.98] ${
+                GRADE_STYLES[grade] ?? DEFAULT_GRADE_STYLE
+              }`}
+            >
+              <span className="text-4xl">{GRADE_ICONS[grade] ?? "⭐"}</span>
+              <span className="text-lg font-bold">{GRADE_LABELS[grade] ?? grade}</span>
+            </button>
+          ))}
+        </div>
+        <div className="mt-8 text-center">
+          <button
+            type="button"
+            onClick={() => setShowAll(true)}
+            className="rounded-full border-2 border-slate-200 px-5 py-2 text-sm font-medium text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+          >
+            ぜんぶ見る
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex items-center justify-center gap-3">
+        <span className="rounded-full bg-slate-900 px-4 py-1.5 text-sm font-bold text-white dark:bg-white dark:text-slate-900">
+          {showAll ? "すべての学年" : (GRADE_LABELS[selectedGrade!] ?? selectedGrade)}
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedGrade(null);
+            setShowAll(false);
+          }}
+          className="rounded-full border-2 border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400"
+        >
+          学年を選びなおす
+        </button>
+      </div>
+
+      <div className="mb-4">
         <input
           type="text"
           value={query}
@@ -59,33 +116,6 @@ export function MaterialGrid({ materials, subjects }: MaterialGridProps) {
           placeholder="教材名・単元・タグで検索"
           className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none sm:w-72 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
         />
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setGradeBand(null)}
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              gradeBand === null
-                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-            }`}
-          >
-            すべての学年
-          </button>
-          {GRADE_BANDS.map((band) => (
-            <button
-              key={band}
-              type="button"
-              onClick={() => setGradeBand(band)}
-              className={`rounded-full px-3 py-1 text-xs font-medium ${
-                gradeBand === band
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-              }`}
-            >
-              {band}
-            </button>
-          ))}
-        </div>
       </div>
 
       {visibleSubjects.length > 1 && (

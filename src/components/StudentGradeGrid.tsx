@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Material } from "@/lib/materials";
 import { getOrderedGrades } from "@/lib/grades";
+import { GRADE_STYLES, GRADE_ICONS, GRADE_LABELS, DEFAULT_GRADE_STYLE } from "@/lib/gradeDisplay";
 import { STUDENT_ICONS, DEFAULT_STUDENT_ICON } from "@/lib/studentIcons";
 
 type StudentGradeGridProps = {
@@ -22,36 +23,6 @@ const SUBJECT_STYLES: Record<string, string> = {
 };
 const DEFAULT_SUBJECT_STYLE =
   "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700";
-
-const GRADE_STYLES: Record<string, string> = {
-  小学2年: "bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-100 border-amber-300 dark:border-amber-800",
-  小学3年: "bg-orange-100 dark:bg-orange-950 text-orange-900 dark:text-orange-100 border-orange-300 dark:border-orange-800",
-  小学4年: "bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-100 border-emerald-300 dark:border-emerald-800",
-  小学5年: "bg-sky-100 dark:bg-sky-950 text-sky-900 dark:text-sky-100 border-sky-300 dark:border-sky-800",
-  小学6年: "bg-indigo-100 dark:bg-indigo-950 text-indigo-900 dark:text-indigo-100 border-indigo-300 dark:border-indigo-800",
-  中学1年: "bg-violet-100 dark:bg-violet-950 text-violet-900 dark:text-violet-100 border-violet-300 dark:border-violet-800",
-  全学年: "bg-pink-100 dark:bg-pink-950 text-pink-900 dark:text-pink-100 border-pink-300 dark:border-pink-800",
-};
-
-const GRADE_LABELS: Record<string, string> = {
-  小学2年: "2年生",
-  小学3年: "3年生",
-  小学4年: "4年生",
-  小学5年: "5年生",
-  小学6年: "6年生",
-  中学1年: "中学1年",
-  全学年: "みんな向け",
-};
-
-const GRADE_ICONS: Record<string, string> = {
-  小学2年: "2️⃣",
-  小学3年: "3️⃣",
-  小学4年: "4️⃣",
-  小学5年: "5️⃣",
-  小学6年: "6️⃣",
-  中学1年: "🎓",
-  全学年: "🌈",
-};
 
 export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps) {
   const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
@@ -82,7 +53,7 @@ export function StudentGradeGrid({ materials, subjects }: StudentGradeGridProps)
               type="button"
               onClick={() => setSelectedGrade(grade)}
               className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-8 text-center transition hover:scale-[1.03] active:scale-[0.98] ${
-                GRADE_STYLES[grade] ?? DEFAULT_SUBJECT_STYLE
+                GRADE_STYLES[grade] ?? DEFAULT_GRADE_STYLE
               }`}
             >
               <span className="text-4xl">{GRADE_ICONS[grade] ?? "⭐"}</span>
