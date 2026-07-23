@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_NAME } from "@/lib/site";
+import { SITE_NAME, CONTACT_FORM_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: `プライバシーポリシー | ${SITE_NAME}`,
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
         本ポリシーや教材の作成・修正に関するお問い合わせは、下記のフォームからご連絡ください。
         <br />
         <a
-          href="https://script.google.com/macros/s/AKfycbwFRkp-1KpIgc8YBod28JI43qv0XbT7flajiK3u2vuMpbJorycgmEPIauBpWT8_RENE/exec"
+          href={CONTACT_FORM_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-2 inline-block rounded-full bg-blue-600 px-5 py-2 font-semibold text-white no-underline hover:bg-blue-700"

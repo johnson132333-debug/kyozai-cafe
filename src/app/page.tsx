@@ -1,6 +1,7 @@
 import { getAllMaterials, getOrderedSubjects } from "@/lib/materials";
 import { MaterialGrid } from "@/components/MaterialGrid";
 import { AdSlot } from "@/components/AdSlot";
+import { CONTACT_FORM_URL } from "@/lib/site";
 
 export default function Home() {
   const materials = getAllMaterials();
@@ -58,9 +59,41 @@ export default function Home() {
             教材カフェは、AIで作成した授業用の小さなWebツールを先生同士で共有・活用するためのライブラリです。
             各教材はブラウザだけで動くHTML/CSS/JavaScriptで作られており、インストール不要でその場から試せます。
           </p>
-          <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          <p className="mb-5 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
             コードはコピーやダウンロードして自由に改変できます。学校の実態に合わせて問題文や見た目を調整してご利用ください。
           </p>
+
+          <div className="border-t border-slate-100 pt-5 dark:border-slate-800">
+            <p className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">
+              教材のご依頼・ご提供はこちらから
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={CONTACT_FORM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-600 dark:hover:bg-slate-900 dark:hover:text-blue-400"
+              >
+                📝 制作・修正依頼
+              </a>
+              <a
+                href={CONTACT_FORM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-600 dark:hover:bg-slate-900 dark:hover:text-blue-400"
+              >
+                💾 コード提供
+              </a>
+              <a
+                href={CONTACT_FORM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-600 dark:hover:bg-slate-900 dark:hover:text-blue-400"
+              >
+                ✉️ お問い合わせ
+              </a>
+            </div>
+          </div>
         </section>
       </div>
     </div>
