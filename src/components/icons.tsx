@@ -168,12 +168,25 @@ function IconHeartHands(p: IconProps) {
   );
 }
 
+function IconRunner(p: IconProps) {
+  return (
+    <IconBase {...p}>
+      <circle cx="23" cy="8" r="4" />
+      <path d="M21 12 L14 18 L18 22 L14 34" />
+      <path d="M18 22 L26 24 L30 34" />
+      <path d="M14 18 L6 16" />
+      <path d="M18 22 L28 14" />
+    </IconBase>
+  );
+}
+
 const SUBJECT_ICON_MAP: Record<string, (props: IconProps) => ReactNode> = {
   算数: IconAbacus,
   国語: IconBookOpen,
   生活科: IconSprout,
   社会: IconGlobe,
   理科: IconFlask,
+  体育: IconRunner,
   英語: IconSpeechGlobe,
   学級経営: IconClipboard,
   特別支援: IconHeartHands,
@@ -652,6 +665,17 @@ function IconWritingLines(p: IconProps) {
   );
 }
 
+function IconVideoCompare(p: IconProps) {
+  return (
+    <IconBase {...p}>
+      <rect x="3" y="10" width="16" height="20" rx="2.5" />
+      <path d="M9 16 L15 20 L9 24 Z" fill="currentColor" stroke="none" />
+      <rect x="21" y="10" width="16" height="20" rx="2.5" />
+      <path d="M27 16 L33 20 L27 24 Z" fill="currentColor" stroke="none" />
+    </IconBase>
+  );
+}
+
 const MATERIAL_ICON_MAP: Record<string, (props: IconProps) => ReactNode> = {
   "kuku-drill": IconMultiplyBadge,
   "pref-quiz": IconMapPin,
@@ -703,6 +727,7 @@ const MATERIAL_ICON_MAP: Record<string, (props: IconProps) => ReactNode> = {
   "keigo-basics-g5": IconBowPerson,
   "reflection-stars-lowgrade": IconStarRating,
   "reflection-text-midgrade": IconWritingLines,
+  "video-compare-pe": IconVideoCompare,
 };
 
 export function MaterialIcon({ slug, className }: { slug: string; className?: string }) {
