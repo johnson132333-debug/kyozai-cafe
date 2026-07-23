@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<title>教材 制作・修正 お問い合わせフォーム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FFFFFF;
+    --paper-line:#C7C2B4;
+    --ink:#111111;
+    --ink-soft:#4A4A4A;
+    --amber:#B8631A;
+    --amber-soft:#FCEBDA;
+    --teal:#1F5A4D;
+    --teal-soft:#DCEEE8;
+    --white:#FFFFFF;
+    --danger:#B4552F;
+  }
+  html{
+    color-scheme: light only;
+    background:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper) !important;
+    color:var(--ink) !important;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    line-height:1.7;
+    padding-bottom:80px;
+  }
+  header{
+    padding:56px 24px 40px;
+    max-width:760px;
+    margin:0 auto;
+    position:relative;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.18em;
+    color:var(--teal);
+    text-transform:uppercase;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:22px;height:1px;background:var(--teal);
+  }
+  h1{
+    font-family:'Zen Old Mincho', serif;
+    font-weight:700;
+    font-size:clamp(28px,5vw,40px);
+    margin:0 0 14px;
+    letter-spacing:0.02em;
+  }
+  header p.lead{
+    color:var(--ink-soft);
+    font-size:15px;
+    max-width:56ch;
+    margin:0 0 16px;
+  }
+  header p.notice{
+    color:var(--ink-soft);
+    font-size:12.5px;
+    line-height:1.8;
+    max-width:56ch;
+    margin:0;
+    padding:12px 14px;
+    background:var(--teal-soft);
+    border-left:3px solid var(--teal);
+    border-radius:2px;
+  }
+  main{
+    max-width:760px;
+    margin:0 auto;
+    padding:0 24px;
+  }
+  .step{
+    position:relative;
+    padding:40px 0 8px 52px;
+  }
+  .step + .step{
+    border-top:1px solid var(--paper-line);
+  }
+  .step-num{
+    position:absolute;
+    left:0;
+    top:40px;
+    width:32px;height:32px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    font-weight:700;
+    color:var(--white);
+    background:var(--teal);
+  }
+  .step-title{
+    font-family:'Zen Old Mincho', serif;
+    font-size:19px;
+    font-weight:700;
+    margin:0 0 4px;
+  }
+  .step-sub{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0 0 20px;
+  }
+  .field{
+    margin-bottom:18px;
+  }
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:6px;
+  }
+  .field .hint{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    display:block;
+  }
+  input[type=text], input[type=url], textarea, select{
+    width:100%;
+    padding:11px 13px;
+    font-family:inherit;
+    font-size:14.5px;
+    color:var(--ink);
+    background:var(--white);
+    border:1.5px solid #9B9788;
+    border-radius:3px;
+    resize:vertical;
+  }
+  textarea{min-height:64px;}
+  input[type=text]:focus, input[type=url]:focus, textarea:focus, select:focus{
+    outline:none;
+    border-color:var(--teal);
+    box-shadow:0 0 0 3px var(--teal-soft);
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:600px){.row2{grid-template-columns:1fr;}}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    position:relative;
+  }
+  .chip input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;margin:0;}
+  .chip span{
+    display:inline-block;
+    padding:7px 14px;
+    border:1.5px solid #9B9788;
+    border-radius:20px;
+    font-size:13px;
+    background:var(--white);
+    color:var(--ink);
+    transition:all .12s ease;
+    cursor:pointer;
+    user-select:none;
+  }
+  .chip input:checked + span{
+    background:var(--teal-soft);
+    border-color:var(--teal);
+    color:var(--teal);
+    font-weight:700;
+  }
+  .radio-row{display:flex;flex-wrap:wrap;gap:16px;}
+  .radio-row label{
+    display:flex;align-items:center;gap:6px;
+    font-size:13.5px;font-weight:500;color:var(--ink);
+    cursor:pointer;
+  }
+  .radio-row input{accent-color:var(--teal);}
+
+  .step-num.done{background:var(--teal);color:var(--white);}
+
+  .bottombar{
+    position:fixed;
+    left:0;right:0;bottom:0;
+    background:var(--ink);
+    padding:14px 24px;
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    flex-wrap:wrap;
+    box-shadow:0 -4px 18px rgba(0,0,0,0.15);
+    z-index:20;
+  }
+  .btn{
+    font-family:'Zen Kaku Gothic New',sans-serif;
+    font-size:14px;
+    font-weight:700;
+    padding:11px 22px;
+    border-radius:3px;
+    border:none;
+    cursor:pointer;
+    letter-spacing:0.02em;
+  }
+  .btn-primary{background:var(--amber);color:#2A1B0A;}
+  .btn-primary:hover{background:#B9772A;}
+  .btn-ghost{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.35);}
+  .btn-ghost:hover{border-color:var(--white);}
+
+  .output-wrap{
+    max-width:760px;margin:40px auto 0;padding:0 24px;
+    display:none;
+  }
+  .output-wrap.show{display:block;}
+  .output-card{
+    background:var(--white);
+    border:1.5px solid #9B9788;
+    border-left:5px solid var(--amber);
+    border-radius:4px;
+    padding:22px 22px 18px;
+  }
+  .output-card h2{
+    font-family:'Zen Old Mincho',serif;
+    font-size:17px;
+    margin:0 0 4px;
+  }
+  .output-card .note{
+    font-size:12.5px;color:var(--ink-soft);margin:0 0 14px;
+  }
+  #outputText{
+    width:100%;
+    min-height:360px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    line-height:1.75;
+    white-space:pre-wrap;
+    padding:16px;
+    background:#FAFAF8;
+    border:1.5px solid #9B9788;
+    border-radius:3px;
+  }
+  .send-row{
+    margin-top:14px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .sendbtn{
+    background:var(--amber);
+    color:#2A1B0A;
+    font-size:13.5px;font-weight:700;
+    padding:10px 20px;border:none;border-radius:3px;cursor:pointer;
+  }
+  .sendbtn:hover{background:#B9772A;}
+  .sendbtn:disabled{background:#D8C7B3;color:#8A7A63;cursor:default;}
+  .copybtn{
+    background:var(--teal);color:var(--white);
+    font-size:13px;font-weight:700;
+    padding:10px 18px;border:none;border-radius:3px;cursor:pointer;
+  }
+  .copybtn.copied{background:var(--amber);color:#2A1B0A;}
+  .send-status{
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    min-height:18px;
+  }
+  .send-status.ok{color:var(--teal);font-weight:700;}
+  .send-status.warn{color:var(--danger);font-weight:700;}
+
+  .code-block{
+    margin-bottom:14px;
+    border:1.5px solid #9B9788;
+    border-radius:4px;
+    padding:12px;
+    background:#FAFAF8;
+  }
+  .code-block-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .code-block-head input[type=text]{
+    flex:1;
+  }
+  .code-block textarea{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    min-height:120px;
+  }
+  .removecodebtn{
+    background:transparent;
+    border:1.5px solid var(--danger);
+    color:var(--danger);
+    font-size:12px;font-weight:700;
+    padding:7px 12px;border-radius:3px;cursor:pointer;
+    white-space:nowrap;
+  }
+  .addcodebtn{
+    background:var(--teal-soft);
+    color:var(--teal);
+    border:1.5px dashed var(--teal);
+    font-size:13px;font-weight:700;
+    padding:9px 16px;border-radius:3px;cursor:pointer;
+    width:100%;
+  }
+
+  footer.spacer{height:20px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">教材制作 お問い合わせフォーム</div>
+  <h1>教材の作成・修正、<br>どちらもここから</h1>
+  <p class="lead">まず依頼の種類を選び、項目を埋めていくと、下部に依頼文がまとまった形で出力されます。「送信する」を押すとそのままメールで届きます。</p>
+  <p class="notice">※個人で仕事の合間に対応しているため、返信などは基本的にできません。<br>※いただいた依頼にお応えできるかどうかはお約束できません。あらかじめご了承ください。<br>※できるだけイメージに近いものを作りたいので、分かる範囲で構いませんのでご入力をお願いします。<br>※アプリを追加・更新した場合はXでお知らせします。</p>
+</header>
+
+<main>
+
+  <div class="step">
+    <div class="step-num">0</div>
+    <p class="step-title">依頼者情報</p>
+    <p class="step-sub">誰からの依頼か、連絡先も添えてください</p>
+    <div class="row2">
+      <div class="field">
+        <label>お名前(ニックネーム)</label>
+        <input type="text" id="f_name" placeholder="例:山田 太郎" oninput="checkStep0()">
+      </div>
+      <div class="field">
+        <label>連絡先</label>
+        <input type="text" id="f_contact" placeholder="例:yamada@school.jp" oninput="checkStep0()">
+      </div>
+    </div>
+  </div>
+
+  <div id="afterStep0" style="display:none;">
+  <div class="step">
+    <div class="step-num">1</div>
+    <p class="step-title">依頼の種類</p>
+    <p class="step-sub">まずはどちらの依頼か選んでください</p>
+    <div class="field">
+      <div class="radio-row">
+        <label><input type="radio" name="reqtype" value="new" onchange="switchMode()"> 新しく教材を作ってほしい</label>
+        <label><input type="radio" name="reqtype" value="edit" onchange="switchMode()"> 今ある教材を修正してほしい</label>
+        <label><input type="radio" name="reqtype" value="contact" onchange="switchMode()"> その他の問い合わせ</label>
+        <label><input type="radio" name="reqtype" value="provide" onchange="switchMode()"> 教材を提供する</label>
+      </div>
+    </div>
+  </div>
+
+  <div id="modeNew" class="mode-section" style="display:none;">
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <p class="step-title">基本情報</p>
+    <p class="step-sub">教材を使う場面を教えてください</p>
+    <div class="row2">
+      <div class="field">
+        <label>対象学年</label>
+        <input type="text" id="f_grade" placeholder="例:小学5年生">
+      </div>
+      <div class="field">
+        <label>単元名</label>
+        <input type="text" id="f_unit" placeholder="例:台形の面積">
+      </div>
+    </div>
+    <div class="field">
+      <label>教科書会社</label>
+      <span class="hint">東京書籍、啓林館 など</span>
+      <input type="text" id="f_publisher" placeholder="例:東京書籍">
+    </div>
+    <div class="field">
+      <label>学級の種類</label>
+      <div class="radio-row">
+        <label><input type="radio" name="classtype" value="通常学級">通常学級</label>
+        <label><input type="radio" name="classtype" value="少人数指導">少人数指導</label>
+        <label><input type="radio" name="classtype" value="特別支援学級">特別支援学級</label>
+        <label><input type="radio" name="classtype" value="その他">その他</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>授業内での位置づけ</label>
+      <span class="hint">導入/展開/まとめのどこか、また何時間目かなど</span>
+      <input type="text" id="f_position" placeholder="例:全4時間中の2時間目、展開部分">
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <p class="step-title">ねらい・学習目標</p>
+    <p class="step-sub">その教材で何を身につけさせたいか</p>
+    <div class="field">
+      <label>身につけさせたい力</label>
+      <span class="hint">例:公式暗記ではなく、なぜその公式になるかの理解を重視 など</span>
+      <textarea id="f_goal" placeholder="この教材で子どもたちにどうなってほしいか"></textarea>
+    </div>
+    <div class="field">
+      <label>学習の流れ・思考のステップ</label>
+      <span class="hint">例:観察 → 予想 → 操作 → 試行 → 比較 → まとめ</span>
+      <textarea id="f_flow" placeholder="想定している展開の順序"></textarea>
+    </div>
+    <div class="field">
+      <label>想定する考え方のパターン</label>
+      <span class="hint">複数の解法・気づき方が考えられる場合は、できるだけ列挙してください</span>
+      <textarea id="f_patterns" placeholder="子どもが辿りつきそうな考え方をいくつか"></textarea>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <p class="step-title">動作環境</p>
+    <p class="step-sub">どこで、どう使われるか</p>
+    <div class="field">
+      <label>使用デバイス</label>
+      <div class="chips">
+        <label class="chip"><input type="checkbox" value="Chromebook"><span>Chromebook</span></label>
+        <label class="chip"><input type="checkbox" value="電子黒板"><span>電子黒板</span></label>
+        <label class="chip"><input type="checkbox" value="タブレット"><span>タブレット</span></label>
+        <label class="chip"><input type="checkbox" value="オフライン動作が必要"><span>オフライン動作が必要</span></label>
+      </div>
+    </div>
+    <div class="field">
+      <label>利用形態</label>
+      <div class="radio-row">
+        <label><input type="radio" name="usage" value="一斉指導用">一斉指導用</label>
+        <label><input type="radio" name="usage" value="個別学習用">個別学習用</label>
+        <label><input type="radio" name="usage" value="両方">両方</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>構成</label>
+      <div class="radio-row">
+        <label><input type="radio" name="structure" value="HTML単体で完結">HTML単体で完結</label>
+        <label><input type="radio" name="structure" value="外部連携が必要">外部連携が必要(Googleスライド送信など)</label>
+      </div>
+      <textarea id="f_structure_note" placeholder="外部連携の場合は詳細を(送信先、形式など)" style="margin-top:8px;"></textarea>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <p class="step-title">機能要件</p>
+    <p class="step-sub">教材にどんな機能を持たせたいか</p>
+    <div class="field">
+      <label>必須機能</label>
+      <span class="hint">表示・操作・入力など、必ず入れてほしい機能</span>
+      <textarea id="f_features" placeholder="例:図形を動かして角度を変えられる、など"></textarea>
+    </div>
+    <div class="field">
+      <label>支援方針</label>
+      <span class="hint">例:正解をすぐに出さない/試行錯誤を促す/ヒントは段階的に出す など</span>
+      <textarea id="f_support" placeholder="つまずいたときの支援の方向性"></textarea>
+    </div>
+    <div class="field">
+      <label>記録・共有機能</label>
+      <span class="hint">メモ欄、結果送信ボタンなどが必要か</span>
+      <textarea id="f_record" placeholder="必要な記録・共有機能があれば"></textarea>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">6</div>
+    <p class="step-title">UI・デザインの好み</p>
+    <p class="step-sub">見た目や操作感の希望</p>
+    <div class="field">
+      <label>操作感</label>
+      <div class="radio-row">
+        <label><input type="radio" name="uistyle" value="常時表示"> 常時表示</label>
+        <label><input type="radio" name="uistyle" value="ボタンで開閉"> ボタンで開閉</label>
+        <label><input type="radio" name="uistyle" value="こだわりなし"> こだわりなし</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>見た目のトーン</label>
+      <span class="hint">対象学年の子どもに合わせた雰囲気など</span>
+      <input type="text" id="f_tone" placeholder="例:低学年向けにやわらかい配色、文字は大きめ">
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">7</div>
+    <p class="step-title">その他・自由記述</p>
+    <p class="step-sub">参考資料や補足があれば</p>
+    <div class="field">
+      <textarea id="f_free" placeholder="その他伝えておきたいこと" style="min-height:90px;"></textarea>
+    </div>
+  </div>
+
+  </div>
+
+  <div id="modeEdit" class="mode-section" style="display:none;">
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <p class="step-title">対象の教材</p>
+    <p class="step-sub">どの教材を修正してほしいか</p>
+    <div class="field">
+      <label>教材のリンク(URL)</label>
+      <span class="hint">共有リンクを貼り付けてください</span>
+      <input type="url" id="e_link" placeholder="例:https://claude.ai/share/...">
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <p class="step-title">修正の背景・課題</p>
+    <p class="step-sub">何に困っているか、なぜ修正したいか</p>
+    <div class="field">
+      <label>現状の問題点</label>
+      <span class="hint">例:操作がわかりづらい、表示が崩れる、想定と違う反応をする など</span>
+      <textarea id="e_problem" placeholder="今の教材で困っていること"></textarea>
+    </div>
+    <div class="field">
+      <label>気づいたきっかけ</label>
+      <span class="hint">授業で使ってみて、児童の反応を見て、など</span>
+      <textarea id="e_trigger" placeholder="修正が必要だと感じた場面"></textarea>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <p class="step-title">修正してほしい内容</p>
+    <p class="step-sub">できるだけ具体的に</p>
+    <div class="field">
+      <label>変更したい点</label>
+      <textarea id="e_changes" placeholder="例:ヒントを3段階に分けたい、文字を大きくしたい など"></textarea>
+    </div>
+    <div class="field">
+      <label>優先度</label>
+      <span class="hint">複数ある場合、どれを優先してほしいか</span>
+      <textarea id="e_priority" placeholder="優先順位があれば"></textarea>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <p class="step-title">変更しないでほしい部分</p>
+    <p class="step-sub">そのまま残したい要素があれば</p>
+    <div class="field">
+      <textarea id="e_keep" placeholder="例:見た目のトーンは変えたくない、この機能は残してほしい など"></textarea>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">6</div>
+    <p class="step-title">その他・自由記述</p>
+    <p class="step-sub">参考資料や補足があれば</p>
+    <div class="field">
+      <textarea id="e_free" placeholder="その他伝えておきたいこと" style="min-height:90px;"></textarea>
+    </div>
+  </div>
+
+  </div>
+
+  <div id="modeContact" class="mode-section" style="display:none;">
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <p class="step-title">お問い合わせ内容</p>
+    <p class="step-sub">ご質問・ご相談などを自由にお書きください</p>
+    <div class="field">
+      <textarea id="c_free" placeholder="お問い合わせの内容をご記入ください" style="min-height:140px;"></textarea>
+    </div>
+  </div>
+
+  </div>
+
+  <div id="modeProvide" class="mode-section" style="display:none;">
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <p class="step-title">教材の提供</p>
+    <p class="step-sub">コードを貼り付けてください。複数ある場合は「コードを追加」で欄を増やせます</p>
+    <div class="field">
+      <label>教材の説明</label>
+      <span class="hint">どんな教材か、簡単に教えてください</span>
+      <textarea id="p_desc" placeholder="例:台形の面積を求める教材です"></textarea>
+    </div>
+    <div id="codeList"></div>
+    <button type="button" class="addcodebtn" onclick="addCodeBlock()">＋ コードを追加</button>
+  </div>
+
+  </div>
+
+  </div>
+
+</main>
+
+<div class="output-wrap" id="outputWrap">
+  <div class="output-card">
+    <h2>依頼文プレビュー</h2>
+    <p class="note">「送信する」を押すとこの内容がメールで届きます。控えが欲しい場合は「コピーする」もご利用ください。</p>
+    <textarea id="outputText" readonly></textarea>
+    <div class="send-row">
+      <button class="sendbtn" id="sendBtn" onclick="sendToEmail()">📤 この内容を送信する</button>
+      <button class="copybtn" id="copyBtn" onclick="copyOutput()">コピーする（手元に控える）</button>
+    </div>
+    <div class="send-status" id="sendStatus"></div>
+  </div>
+</div>
+
+<footer class="spacer"></footer>
+
+<div class="bottombar">
+  <button class="btn btn-primary" onclick="generateOutput()">依頼文を生成する</button>
+  <button class="btn btn-ghost" onclick="resetForm()">入力内容をリセット</button>
+</div>
+
+<script>
+function val(id){
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+function radioVal(name){
+  const el = document.querySelector('input[name="'+name+'"]:checked');
+  return el ? el.value : '';
+}
+function chipVals(){
+  return Array.from(document.querySelectorAll('.chip input:checked')).map(i=>i.value);
+}
+
+function line(label, value){
+  return value ? (label + '\n' + value + '\n') : '';
+}
+
+function checkStep0(){
+  const filled = val('f_name') && val('f_contact');
+  document.getElementById('afterStep0').style.display = filled ? 'block' : 'none';
+}
+
+function switchMode(){
+  const mode = radioVal('reqtype');
+  document.getElementById('modeNew').style.display = (mode==='new') ? 'block' : 'none';
+  document.getElementById('modeEdit').style.display = (mode==='edit') ? 'block' : 'none';
+  document.getElementById('modeContact').style.display = (mode==='contact') ? 'block' : 'none';
+  document.getElementById('modeProvide').style.display = (mode==='provide') ? 'block' : 'none';
+  if(mode==='provide' && document.querySelectorAll('#codeList .code-block').length === 0){
+    addCodeBlock();
+  }
+}
+
+let codeBlockCount = 0;
+function addCodeBlock(){
+  codeBlockCount++;
+  const id = codeBlockCount;
+  const wrap = document.createElement('div');
+  wrap.className = 'code-block';
+  wrap.id = 'codeBlock' + id;
+  wrap.innerHTML =
+    '<div class="code-block-head">' +
+      '<input type="text" id="p_title_' + id + '" placeholder="例:HTML本体、Google Apps Script など(任意)">' +
+      '<button type="button" class="removecodebtn" onclick="removeCodeBlock(' + id + ')">削除</button>' +
+    '</div>' +
+    '<textarea id="p_code_' + id + '" placeholder="ここにコードを貼り付けてください"></textarea>';
+  document.getElementById('codeList').appendChild(wrap);
+}
+function removeCodeBlock(id){
+  const el = document.getElementById('codeBlock' + id);
+  if(el) el.remove();
+}
+
+function generateOutput(){
+  const mode = radioVal('reqtype');
+  const parts = [];
+
+  const name = val('f_name');
+  const contact = val('f_contact');
+
+  if(mode === 'provide'){
+    parts.push('■教材の提供\n');
+    if(name || contact){
+      parts.push('【依頼者】');
+      if(name) parts.push('氏名: ' + name);
+      if(contact) parts.push('連絡先: ' + contact);
+      parts.push('');
+    }
+    if(val('p_desc')){
+      parts.push('【教材の説明】');
+      parts.push(val('p_desc'));
+      parts.push('');
+    }
+    const blocks = document.querySelectorAll('#codeList .code-block');
+    let n = 0;
+    blocks.forEach(function(b){
+      const idMatch = b.id.replace('codeBlock','');
+      const title = val('p_title_' + idMatch);
+      const code = val('p_code_' + idMatch);
+      if(!code) return;
+      n++;
+      parts.push('【コード' + n + (title ? ': ' + title : '') + '】');
+      parts.push('```\n' + code + '\n```');
+      parts.push('');
+    });
+  } else if(mode === 'contact'){
+    parts.push('■お問い合わせ\n');
+    if(name || contact){
+      parts.push('【依頼者】');
+      if(name) parts.push('氏名: ' + name);
+      if(contact) parts.push('連絡先: ' + contact);
+      parts.push('');
+    }
+    if(val('c_free')) parts.push(val('c_free'));
+  } else if(mode === 'edit'){
+    parts.push('■教材修正依頼\n');
+    if(name || contact){
+      parts.push('【依頼者】');
+      if(name) parts.push('氏名: ' + name);
+      if(contact) parts.push('連絡先: ' + contact);
+      parts.push('');
+    }
+    parts.push('【対象の教材】');
+    if(val('e_link')) parts.push('教材のリンク: ' + val('e_link'));
+    parts.push('');
+
+    parts.push('【修正の背景・課題】');
+    if(val('e_problem')) parts.push('現状の問題点:\n' + val('e_problem'));
+    if(val('e_trigger')) parts.push('気づいたきっかけ:\n' + val('e_trigger'));
+    parts.push('');
+
+    parts.push('【修正してほしい内容】');
+    if(val('e_changes')) parts.push('変更したい点:\n' + val('e_changes'));
+    if(val('e_priority')) parts.push('優先度:\n' + val('e_priority'));
+    parts.push('');
+
+    parts.push('【変更しないでほしい部分】');
+    if(val('e_keep')) parts.push(val('e_keep'));
+    parts.push('');
+
+    if(val('e_free')){
+      parts.push('【その他】');
+      parts.push(val('e_free'));
+    }
+  } else {
+    parts.push('■教材作成依頼\n');
+    if(name || contact){
+      parts.push('【依頼者】');
+      if(name) parts.push('氏名: ' + name);
+      if(contact) parts.push('連絡先: ' + contact);
+      parts.push('');
+    }
+
+    parts.push('【基本情報】');
+    if(val('f_grade')) parts.push('対象学年: ' + val('f_grade'));
+    if(val('f_unit')) parts.push('単元名: ' + val('f_unit'));
+    if(val('f_publisher')) parts.push('教科書会社: ' + val('f_publisher'));
+    if(radioVal('classtype')) parts.push('学級の種類: ' + radioVal('classtype'));
+    if(val('f_position')) parts.push('授業内での位置づけ: ' + val('f_position'));
+    parts.push('');
+
+    parts.push('【ねらい・学習目標】');
+    if(val('f_goal')) parts.push('身につけさせたい力:\n' + val('f_goal'));
+    if(val('f_flow')) parts.push('学習の流れ:\n' + val('f_flow'));
+    if(val('f_patterns')) parts.push('想定する考え方のパターン:\n' + val('f_patterns'));
+    parts.push('');
+
+    parts.push('【動作環境】');
+    if(chipVals().length) parts.push('使用デバイス: ' + chipVals().join('、'));
+    if(radioVal('usage')) parts.push('利用形態: ' + radioVal('usage'));
+    if(radioVal('structure')) parts.push('構成: ' + radioVal('structure'));
+    if(val('f_structure_note')) parts.push('補足: ' + val('f_structure_note'));
+    parts.push('');
+
+    parts.push('【機能要件】');
+    if(val('f_features')) parts.push('必須機能:\n' + val('f_features'));
+    if(val('f_support')) parts.push('支援方針:\n' + val('f_support'));
+    if(val('f_record')) parts.push('記録・共有機能:\n' + val('f_record'));
+    parts.push('');
+
+    parts.push('【UI・デザインの好み】');
+    if(radioVal('uistyle')) parts.push('操作感: ' + radioVal('uistyle'));
+    if(val('f_tone')) parts.push('見た目のトーン: ' + val('f_tone'));
+    parts.push('');
+
+    if(val('f_free')){
+      parts.push('【その他】');
+      parts.push(val('f_free'));
+    }
+  }
+
+  const text = parts.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  document.getElementById('outputText').value = text;
+  document.getElementById('sendStatus').textContent = '';
+  document.getElementById('sendStatus').className = 'send-status';
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('outputWrap').classList.add('show');
+  document.getElementById('outputWrap').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function copyOutput(){
+  const ta = document.getElementById('outputText');
+  ta.select();
+  document.execCommand('copy');
+  const btn = document.getElementById('copyBtn');
+  btn.textContent = 'コピーしました';
+  btn.classList.add('copied');
+  setTimeout(()=>{ btn.textContent='コピーする（手元に控える）'; btn.classList.remove('copied'); }, 1800);
+}
+
+function sendToEmail(){
+  const text = document.getElementById('outputText').value;
+  const status = document.getElementById('sendStatus');
+  const btn = document.getElementById('sendBtn');
+  if(!text){ return; }
+
+  if (typeof google === 'undefined' || !google.script || !google.script.run) {
+    status.textContent = 'この「送信する」ボタンは、Googleフォームとして公開されたページでのみ使えます。今はローカルのプレビューなので、「コピーする」から内容をコピーして送ってください。';
+    status.className = 'send-status warn';
+    return;
+  }
+
+  btn.disabled = true;
+  status.textContent = '送信中…';
+  status.className = 'send-status';
+
+  google.script.run
+    .withSuccessHandler(function(){
+      status.textContent = '送信しました。ありがとうございます！';
+      status.className = 'send-status ok';
+      btn.disabled = false;
+    })
+    .withFailureHandler(function(){
+      status.textContent = '送信に失敗しました。お手数ですが「コピーする」で内容をコピーし、別の方法でお送りください。';
+      status.className = 'send-status warn';
+      btn.disabled = false;
+    })
+    .sendContactEmail({
+      name: val('f_name'),
+      contact: val('f_contact'),
+      text: text
+    });
+}
+
+function resetForm(){
+  if(!confirm('入力内容をすべてリセットします。よろしいですか?')) return;
+  document.querySelectorAll('input[type=text], input[type=url], textarea').forEach(el=>el.value='');
+  document.querySelectorAll('input[type=radio], input[type=checkbox]').forEach(el=>el.checked=false);
+  document.getElementById('outputWrap').classList.remove('show');
+  document.getElementById('afterStep0').style.display = 'none';
+  document.getElementById('codeList').innerHTML = '';
+  codeBlockCount = 0;
+  switchMode();
+}
+</script>
+
+</body>
+</html>

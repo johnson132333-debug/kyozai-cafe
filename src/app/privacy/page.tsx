@@ -56,9 +56,20 @@ export default function PrivacyPage() {
         お問い合わせ
       </h2>
       <p>
-        本ポリシーに関するお問い合わせは、下記までご連絡ください。
+        本ポリシーや教材の作成・修正に関するお問い合わせは、下記のフォームからご連絡ください。
         <br />
-        メール: kyozai.cafe@gmail.com
+        <a
+          href="https://script.google.com/macros/s/AKfycbwFRkp-1KpIgc8YBod28JI43qv0XbT7flajiK3u2vuMpbJorycgmEPIauBpWT8_RENE/exec"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 inline-block rounded-full bg-blue-600 px-5 py-2 font-semibold text-white no-underline hover:bg-blue-700"
+        >
+          お問い合わせフォームを開く
+        </a>
+        <br />
+        <span className="mt-2 inline-block text-xs text-slate-500 dark:text-slate-400">
+          メールでのご連絡は kyozai.cafe@gmail.com までお願いします。
+        </span>
       </p>
 
       <p className="mt-10 text-xs text-slate-400">最終更新日: 2026年7月22日</p>
