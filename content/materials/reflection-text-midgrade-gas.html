@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>今日のふりかえり（文しょうで書く）（クラス共有版・GAS連携）</title>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 520px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 28px 26px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 22px; text-align: center; }
+
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 6px;
+  }
+  .field .hint {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 6px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 80px;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 2px solid #cbd5e1;
+    font-family: inherit;
+    resize: vertical;
+  }
+  textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+
+  #saveBtn {
+    width: 100%;
+    margin-top: 6px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  #saveBtn:active { transform: scale(0.98); }
+
+  #savedMsg {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    min-height: 18px;
+  }
+  #send-section{
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid #E5E1D6;
+  }
+  #name-row{
+    display:flex; gap:8px; align-items:center; margin-bottom: 12px;
+  }
+  #name-row label{ font-size:13px; font-weight:700; white-space:nowrap; }
+  #name-input{
+    flex:1 1 auto;
+    padding: 10px 12px;
+    font-size: 14px;
+    border-radius: 10px;
+    border: 2px solid #cbd5e1;
+    font-family: inherit;
+  }
+  #name-input:focus{ outline:none; border-color:#2563eb; box-shadow:0 0 0 3px #dbeafe; }
+  #send-btn{
+    width:100%;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: #D9634C;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  #send-btn:hover{ background: #B5432E; }
+  #send-btn:disabled{ opacity:0.6; cursor:default; }
+  #send-status{
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align:center;
+    min-height: 18px;
+  }
+</style>
+
+<style>
+  #mode-toggle {
+    position: fixed; top: 10px; right: 10px; z-index: 999;
+    display: flex; gap: 6px;
+    background: rgba(255,255,255,0.9);
+    padding: 5px; border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(15,23,42,0.15);
+  }
+  #mode-toggle button {
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    font-size: 12px; font-weight: 700;
+    padding: 7px 12px; border: none; border-radius: 999px;
+    background: transparent; color: #64748b; cursor: pointer; white-space: nowrap;
+    transition: all 0.15s ease-out;
+  }
+  #mode-toggle button.active { background: #2563eb; color: #fff; }
+
+  #code-mode {
+    position: absolute; inset: 0; overflow: auto;
+    background: #f3f6fb;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    color: #1f2937;
+    padding: 60px 24px 24px;
+  }
+  #code-mode .wrap { max-width: 760px; margin: 0 auto; }
+  #code-mode h1 { font-size: 20px; margin: 0 0 6px; text-align: center; }
+  #code-mode .sub { color: #64748b; font-size: 13px; margin-bottom: 8px; text-align: center; }
+  #code-mode .lead {
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px;
+    padding: 14px 16px; font-size: 13px; color: #1e3a8a; line-height: 1.7; margin-bottom: 24px;
+  }
+  #code-mode .lead code { background: #dbeafe; padding: 1px 5px; border-radius: 4px; }
+  #code-mode .file-nav { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
+  #code-mode .file-nav a {
+    display: block; padding: 8px 14px; border-radius: 999px; border: 2px solid #e2e8f0;
+    background: #fff; color: #334155; font-size: 13px; font-weight: 700; text-decoration: none;
+  }
+  #code-mode .file-nav a:hover { border-color: #93c5fd; color: #1d4ed8; }
+  #code-mode .file-section {
+    background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    margin-bottom: 24px; overflow: hidden; scroll-margin-top: 20px;
+  }
+  #code-mode .file-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 14px 18px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+  }
+  #code-mode .file-title { display: flex; align-items: center; gap: 8px; }
+  #code-mode .file-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%; background: #2563eb; color: #fff;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  #code-mode .file-name { font-weight: 700; font-size: 15px; color: #1e293b; }
+  #code-mode .file-desc { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  #code-mode .copy-btn {
+    flex-shrink: 0; padding: 8px 14px; font-size: 12px; font-weight: 700;
+    border: none; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer;
+    transition: background 0.15s;
+  }
+  #code-mode .copy-btn:hover { background: #1d4ed8; }
+  #code-mode .copy-btn.copied { background: #16a34a; }
+  #code-mode pre {
+    margin: 0; max-height: 380px; overflow: auto; background: #0f172a; color: #e2e8f0;
+    padding: 16px 18px; font-size: 12px; line-height: 1.6;
+  }
+  #code-mode pre.readme { background: #fffdf5; color: #334155; }
+  #code-mode code { font-family: "SFMono-Regular", Consolas, Menlo, monospace; white-space: pre; }
+</style>
+</head>
+<body>
+
+<div id="mode-toggle">
+  <button id="toggle-screen" class="active" type="button">🎮 実際の画面</button>
+  <button id="toggle-code" type="button">📋 コードをコピー（3ファイル）</button>
+</div>
+
+
+  <div class="card">
+    <h1>今日のふりかえり</h1>
+    <div class="sub">今日の学習を振り返って、自分の言葉で書いてみましょう</div>
+
+    <div class="field">
+      <label>① わかったこと・できるようになったこと</label>
+      <span class="hint">今日の学習で理解できたことを書きましょう</span>
+      <textarea id="q1" placeholder="例：分数のたし算のしかたが分かった"></textarea>
+    </div>
+
+    <div class="field">
+      <label>② もっと知りたいこと・疑問に思ったこと</label>
+      <span class="hint">気になったこと、まだよく分からないことがあれば</span>
+      <textarea id="q2" placeholder="例：分母がちがう分数のひき算はどうやるのか気になった"></textarea>
+    </div>
+
+    <div class="field">
+      <label>③ 次にがんばりたいこと</label>
+      <span class="hint">次の授業や家庭学習で取り組みたいこと</span>
+      <textarea id="q3" placeholder="例：練習問題をもっと解いて慣れたい"></textarea>
+    </div>
+
+    <button id="saveBtn" type="button">きろくする</button>
+    <div id="savedMsg"></div>
+    <div id="send-section">
+      <div id="name-row">
+        <label for="name-input">なまえ</label>
+        <input type="text" id="name-input" placeholder="なまえを入力してね">
+      </div>
+      <button id="send-btn" type="button">📤 みんなに送る</button>
+      <div id="send-status"></div>
+    </div>
+  </div>
+
+<script>
+  const NOTES_KEY = 'reflection-text-midgrade';
+  function safeGet(key){ try{ return localStorage.getItem(key); } catch(e){ return null; } }
+  function safeSet(key, val){ try{ localStorage.setItem(key, val); } catch(e){} }
+
+  const q1 = document.getElementById('q1');
+  const q2 = document.getElementById('q2');
+  const q3 = document.getElementById('q3');
+  const saveBtn = document.getElementById('saveBtn');
+  const savedMsg = document.getElementById('savedMsg');
+
+  function loadSaved(){
+    const raw = safeGet(NOTES_KEY);
+    if(!raw) return;
+    try{
+      const data = JSON.parse(raw);
+      q1.value = data.q1 || '';
+      q2.value = data.q2 || '';
+      q3.value = data.q3 || '';
+    } catch(e) {}
+  }
+
+  saveBtn.addEventListener('click', () => {
+    if(!q1.value.trim() && !q2.value.trim() && !q3.value.trim()){
+      savedMsg.textContent = 'どれか1つは書いてみましょう';
+      savedMsg.style.color = '#dc2626';
+      return;
+    }
+    safeSet(NOTES_KEY, JSON.stringify({ q1: q1.value, q2: q2.value, q3: q3.value }));
+    savedMsg.textContent = '記録しました！';
+    savedMsg.style.color = '#16a34a';
+  });
+
+  const nameInput = document.getElementById('name-input');
+  const sendBtn = document.getElementById('send-btn');
+  const sendStatus = document.getElementById('send-status');
+  const NAME_KEY = 'reflection-text-midgrade-name';
+  nameInput.value = safeGet(NAME_KEY) || '';
+
+  sendBtn.addEventListener('click', () => {
+    if(!q1.value.trim() && !q2.value.trim() && !q3.value.trim()){
+      sendStatus.textContent = 'どれか1つは書いてみましょう';
+      sendStatus.style.color = '#dc2626';
+      return;
+    }
+    const name = nameInput.value.trim();
+    if(!name){
+      sendStatus.textContent = 'なまえを入力してね';
+      sendStatus.style.color = '#dc2626';
+      nameInput.focus();
+      return;
+    }
+    safeSet(NAME_KEY, name);
+
+    if (typeof google === 'undefined' || !google.script || !google.script.run) {
+      sendStatus.textContent = 'この機能はGoogleスプレッドシート連携版として配信された環境でのみ使えます。';
+      sendStatus.style.color = '#dc2626';
+      return;
+    }
+
+    sendBtn.disabled = true;
+    sendStatus.textContent = '送信中…';
+    sendStatus.style.color = '#64748b';
+
+    google.script.run
+      .withSuccessHandler(function(){
+        sendStatus.textContent = '送りました！ありがとう！';
+        sendStatus.style.color = '#16a34a';
+        sendBtn.disabled = false;
+      })
+      .withFailureHandler(function(){
+        sendStatus.textContent = '送信に失敗しました。もう一度試してね';
+        sendStatus.style.color = '#dc2626';
+        sendBtn.disabled = false;
+      })
+      .sendReflection({
+        name: name,
+        q1: q1.value,
+        q2: q2.value,
+        q3: q3.value
+      });
+  });
+
+  loadSaved();
+</script>
+
+
+<div id="code-mode" hidden>
+  <div class="wrap">
+    <h1>今日のふりかえり（文しょうで書く）</h1>
+    <div class="sub">Google Apps Script デプロイ用ファイル一式</div>
+
+    <div class="lead">
+      クラス共有版（児童の回答をGoogleスプレッドシートに集約する機能つき）を
+      Google Apps Scriptにデプロイするための3つのファイルです。
+      それぞれの「コピー」ボタンで個別にコピーし、
+      <code>③ README.txt</code> の手順に沿って <code>script.google.com</code> に貼り付けてください。
+    </div>
+
+    <nav class="file-nav">
+      <a href="#file-index">① index.html</a>
+      <a href="#file-gs">② Code.gs</a>
+      <a href="#file-readme">③ README.txt（手順）</a>
+    </nav>
+
+    <section class="file-section" id="file-index">
+      <div class="file-header">
+        <div class="file-title">
+          <span class="file-badge">1</span>
+          <div>
+            <div class="file-name">index.html</div>
+            <div class="file-desc">児童が触る画面本体（左の「🎮 実際の画面」で動作を確認できます）</div>
+          </div>
+        </div>
+        <button class="copy-btn" data-target="code-index" type="button">コピー</button>
+      </div>
+      <pre><code id="code-index">&lt;!doctype html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8" /&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;
+&lt;title&gt;今日のふりかえり（文しょうで書く）&lt;/title&gt;
+&lt;style&gt;
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 520px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 28px 26px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 22px; text-align: center; }
+
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 6px;
+  }
+  .field .hint {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 6px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 80px;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 2px solid #cbd5e1;
+    font-family: inherit;
+    resize: vertical;
+  }
+  textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+
+  #saveBtn {
+    width: 100%;
+    margin-top: 6px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  #saveBtn:active { transform: scale(0.98); }
+
+  #savedMsg {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    min-height: 18px;
+  }
+  #send-section{
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid #E5E1D6;
+  }
+  #name-row{
+    display:flex; gap:8px; align-items:center; margin-bottom: 12px;
+  }
+  #name-row label{ font-size:13px; font-weight:700; white-space:nowrap; }
+  #name-input{
+    flex:1 1 auto;
+    padding: 10px 12px;
+    font-size: 14px;
+    border-radius: 10px;
+    border: 2px solid #cbd5e1;
+    font-family: inherit;
+  }
+  #name-input:focus{ outline:none; border-color:#2563eb; box-shadow:0 0 0 3px #dbeafe; }
+  #send-btn{
+    width:100%;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: #D9634C;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  #send-btn:hover{ background: #B5432E; }
+  #send-btn:disabled{ opacity:0.6; cursor:default; }
+  #send-status{
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align:center;
+    min-height: 18px;
+  }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="card"&gt;
+    &lt;h1&gt;今日のふりかえり&lt;/h1&gt;
+    &lt;div class="sub"&gt;今日の学習を振り返って、自分の言葉で書いてみましょう&lt;/div&gt;
+
+    &lt;div class="field"&gt;
+      &lt;label&gt;① わかったこと・できるようになったこと&lt;/label&gt;
+      &lt;span class="hint"&gt;今日の学習で理解できたことを書きましょう&lt;/span&gt;
+      &lt;textarea id="q1" placeholder="例：分数のたし算のしかたが分かった"&gt;&lt;/textarea&gt;
+    &lt;/div&gt;
+
+    &lt;div class="field"&gt;
+      &lt;label&gt;② もっと知りたいこと・疑問に思ったこと&lt;/label&gt;
+      &lt;span class="hint"&gt;気になったこと、まだよく分からないことがあれば&lt;/span&gt;
+      &lt;textarea id="q2" placeholder="例：分母がちがう分数のひき算はどうやるのか気になった"&gt;&lt;/textarea&gt;
+    &lt;/div&gt;
+
+    &lt;div class="field"&gt;
+      &lt;label&gt;③ 次にがんばりたいこと&lt;/label&gt;
+      &lt;span class="hint"&gt;次の授業や家庭学習で取り組みたいこと&lt;/span&gt;
+      &lt;textarea id="q3" placeholder="例：練習問題をもっと解いて慣れたい"&gt;&lt;/textarea&gt;
+    &lt;/div&gt;
+
+    &lt;button id="saveBtn" type="button"&gt;きろくする&lt;/button&gt;
+    &lt;div id="savedMsg"&gt;&lt;/div&gt;
+    &lt;div id="send-section"&gt;
+      &lt;div id="name-row"&gt;
+        &lt;label for="name-input"&gt;なまえ&lt;/label&gt;
+        &lt;input type="text" id="name-input" placeholder="なまえを入力してね"&gt;
+      &lt;/div&gt;
+      &lt;button id="send-btn" type="button"&gt;📤 みんなに送る&lt;/button&gt;
+      &lt;div id="send-status"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+&lt;script&gt;
+  const NOTES_KEY = 'reflection-text-midgrade';
+  function safeGet(key){ try{ return localStorage.getItem(key); } catch(e){ return null; } }
+  function safeSet(key, val){ try{ localStorage.setItem(key, val); } catch(e){} }
+
+  const q1 = document.getElementById('q1');
+  const q2 = document.getElementById('q2');
+  const q3 = document.getElementById('q3');
+  const saveBtn = document.getElementById('saveBtn');
+  const savedMsg = document.getElementById('savedMsg');
+
+  function loadSaved(){
+    const raw = safeGet(NOTES_KEY);
+    if(!raw) return;
+    try{
+      const data = JSON.parse(raw);
+      q1.value = data.q1 || '';
+      q2.value = data.q2 || '';
+      q3.value = data.q3 || '';
+    } catch(e) {}
+  }
+
+  saveBtn.addEventListener('click', () =&gt; {
+    if(!q1.value.trim() &amp;&amp; !q2.value.trim() &amp;&amp; !q3.value.trim()){
+      savedMsg.textContent = 'どれか1つは書いてみましょう';
+      savedMsg.style.color = '#dc2626';
+      return;
+    }
+    safeSet(NOTES_KEY, JSON.stringify({ q1: q1.value, q2: q2.value, q3: q3.value }));
+    savedMsg.textContent = '記録しました！';
+    savedMsg.style.color = '#16a34a';
+  });
+
+  const nameInput = document.getElementById('name-input');
+  const sendBtn = document.getElementById('send-btn');
+  const sendStatus = document.getElementById('send-status');
+  const NAME_KEY = 'reflection-text-midgrade-name';
+  nameInput.value = safeGet(NAME_KEY) || '';
+
+  sendBtn.addEventListener('click', () =&gt; {
+    if(!q1.value.trim() &amp;&amp; !q2.value.trim() &amp;&amp; !q3.value.trim()){
+      sendStatus.textContent = 'どれか1つは書いてみましょう';
+      sendStatus.style.color = '#dc2626';
+      return;
+    }
+    const name = nameInput.value.trim();
+    if(!name){
+      sendStatus.textContent = 'なまえを入力してね';
+      sendStatus.style.color = '#dc2626';
+      nameInput.focus();
+      return;
+    }
+    safeSet(NAME_KEY, name);
+
+    if (typeof google === 'undefined' || !google.script || !google.script.run) {
+      sendStatus.textContent = 'この機能はGoogleスプレッドシート連携版として配信された環境でのみ使えます。';
+      sendStatus.style.color = '#dc2626';
+      return;
+    }
+
+    sendBtn.disabled = true;
+    sendStatus.textContent = '送信中…';
+    sendStatus.style.color = '#64748b';
+
+    google.script.run
+      .withSuccessHandler(function(){
+        sendStatus.textContent = '送りました！ありがとう！';
+        sendStatus.style.color = '#16a34a';
+        sendBtn.disabled = false;
+      })
+      .withFailureHandler(function(){
+        sendStatus.textContent = '送信に失敗しました。もう一度試してね';
+        sendStatus.style.color = '#dc2626';
+        sendBtn.disabled = false;
+      })
+      .sendReflection({
+        name: name,
+        q1: q1.value,
+        q2: q2.value,
+        q3: q3.value
+      });
+  });
+
+  loadSaved();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+    </section>
+
+    <section class="file-section" id="file-gs">
+      <div class="file-header">
+        <div class="file-title">
+          <span class="file-badge">2</span>
+          <div>
+            <div class="file-name">Code.gs</div>
+            <div class="file-desc">Googleスプレッドシートへの書き込みを行うバックエンド処理</div>
+          </div>
+        </div>
+        <button class="copy-btn" data-target="code-gs" type="button">コピー</button>
+      </div>
+      <pre><code id="code-gs">/**
+ * 「今日のふりかえり（文しょうで書く）」 - みんなの回答をスプレッドシートに送る機能
+ *
+ * 使い方（デプロイ手順）は README.txt を参照してください。
+ */
+
+function doGet(e) {
+  return HtmlService.createTemplateFromFile('index')
+    .evaluate()
+    .setTitle('今日のふりかえり（文しょうで書く）')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function getOrCreateSpreadsheet_() {
+  const props = PropertiesService.getScriptProperties();
+  const savedId = props.getProperty('SPREADSHEET_ID');
+
+  if (savedId) {
+    try {
+      return SpreadsheetApp.openById(savedId);
+    } catch (err) {
+      // 保存されていたIDが無効な場合は作り直す
+    }
+  }
+
+  const ss = SpreadsheetApp.create('今日のふりかえり（文しょうで書く） - みんなのふりかえり');
+  const sheet = ss.getSheets()[0];
+  sheet.appendRow(['送信日時', 'なまえ', '①わかったこと・できるようになったこと', '②知りたいこと・疑問', '③次にがんばりたいこと']);
+  sheet.setFrozenRows(1);
+  props.setProperty('SPREADSHEET_ID', ss.getId());
+  return ss;
+}
+
+/**
+ * フロント側から google.script.run 経由で呼ばれる。
+ * data = { name: string, q1: string, q2: string, q3: string }
+ */
+function sendReflection(data) {
+  if (!data || !data.name) {
+    throw new Error('なまえがありません');
+  }
+
+  const ss = getOrCreateSpreadsheet_();
+  const sheet = ss.getSheets()[0];
+  sheet.appendRow([
+    new Date(),
+    data.name.toString().slice(0, 40),
+    (data.q1 || '').toString().slice(0, 2000),
+    (data.q2 || '').toString().slice(0, 2000),
+    (data.q3 || '').toString().slice(0, 2000),
+  ]);
+
+  return { ok: true };
+}
+</code></pre>
+    </section>
+
+    <section class="file-section" id="file-readme">
+      <div class="file-header">
+        <div class="file-title">
+          <span class="file-badge">3</span>
+          <div>
+            <div class="file-name">README.txt（デプロイ手順）</div>
+            <div class="file-desc">script.google.com への貼り付け方・公開方法</div>
+          </div>
+        </div>
+        <button class="copy-btn" data-target="code-readme" type="button">コピー</button>
+      </div>
+      <pre class="readme"><code id="code-readme">「今日のふりかえり（文しょうで書く）」 スプレッドシート送信版 - デプロイ手順
+====================================================
+
+このフォルダには3つのファイルがあります。
+・index.html … 児童が触る画面（オフライン版に「なまえ」欄と「送る」ボタンを追加したもの）
+・Code.gs     … スプレッドシートにデータを送るためのバックエンド処理
+・README.txt  … このファイル
+
+【1】Google Apps Script プロジェクトを作る
+  1. Google ドライブを開く（学校アカウントでログイン）
+  2. 「新規」→「その他」→「Google Apps Script」
+     （見当たらない場合は https://script.google.com/ から「新しいプロジェクト」）
+  3. プロジェクト名を「今日のふりかえり（文しょうで書く）」などにする
+
+【2】コードを貼り付ける
+  1. 左側のファイル一覧にある「Code.gs」を開き、中身をすべて削除
+  2. 渡した Code.gs の内容をすべて貼り付けて保存（Ctrl+S）
+  3. 左側の「＋」→「HTML」を選び、ファイル名を必ず「index」にする（拡張子は自動でつきます）
+  4. 渡した index.html の内容をすべて貼り付けて保存
+
+【3】ウェブアプリとして公開する
+  1. 右上の「デプロイ」→「新しいデプロイ」
+  2. 種類の選択（歯車マーク）で「ウェブアプリ」を選ぶ
+  3. 「次のユーザーとして実行」→ 自分（先生のアカウント）
+  4. 「アクセスできるユーザー」→ 学校のドメイン内の全員
+     （例：kita9.ed.jp 内の全員、など。学校のGoogle Workspace設定に合わせてください）
+  5. 「デプロイ」をクリックし、表示されたウェブアプリのURLをコピーする
+  6. 初回のみ、権限の承認画面が出るので許可する
+
+【4】児童に配布する
+  ・コピーしたURLをブックマークやGoogle Classroom等で共有すれば、
+    Chromebookのブラウザからそのまま使えます。
+
+【5】スプレッドシートの確認
+  ・誰かが初めて「送る」を押したときに、自動で
+    「今日のふりかえり（文しょうで書く） - みんなのふりかえり」という
+    スプレッドシートがドライブに作成されます。
+  ・以降の送信は、そのシートに1人1行ずつ追加されていきます。
+  ・共有設定（誰が見られるか）は、作成後にドライブから
+    先生が調整してください（デフォルトは先生のみ閲覧可）。
+
+【困ったときは】
+  ・貼り付けたコードを直接書き換えても大丈夫です。次に相談するときは
+    「Code.gsの◯◯を直したい」のように伝えてもらえれば調整できます。
+</code></pre>
+    </section>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const target = document.getElementById(btn.dataset.target);
+      try {
+        await navigator.clipboard.writeText(target.textContent);
+        const original = btn.textContent;
+        btn.textContent = 'コピーしました！';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      } catch (e) {
+        console.error('Copy failed', e);
+      }
+    });
+  });
+
+  (function(){
+    const appEl = document.getElementById('app') || document.querySelector('body > .card') || document.body;
+    const codeEl = document.getElementById('code-mode');
+    const btnScreen = document.getElementById('toggle-screen');
+    const btnCode = document.getElementById('toggle-code');
+
+    btnScreen.addEventListener('click', () => {
+      appEl.hidden = false;
+      codeEl.hidden = true;
+      btnScreen.classList.add('active');
+      btnCode.classList.remove('active');
+    });
+    btnCode.addEventListener('click', () => {
+      appEl.hidden = true;
+      codeEl.hidden = false;
+      btnCode.classList.add('active');
+      btnScreen.classList.remove('active');
+    });
+  })();
+</script>
+</body>
+</html>

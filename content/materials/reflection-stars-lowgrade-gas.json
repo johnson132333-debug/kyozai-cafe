@@ -1,0 +1,10 @@
+{
+  "slug": "reflection-stars-lowgrade-gas",
+  "title": "今日のふりかえり（★でひょうか・クラス共有版）",
+  "subject": "学級経営",
+  "unit": "振り返りシート",
+  "grade": "全学年",
+  "studentFacing": false,
+  "description": "「今日のふりかえり（★でひょうか）」をクラス全体で共有できるようにする、Google Apps Scriptデプロイ用の教材です。右上の切り替えボタンで「🎮 実際の画面」（児童が触る画面をそのまま試せます。送信ボタンはGoogle Apps Scriptとして配信した環境でのみ動作します）と「📋 コードをコピー（3ファイル）」（①index.html②Code.gs③README.txtを個別にコピーできる一覧）を行き来できます。手順どおりにscript.google.comへ貼り付ければ、児童一人ひとりの★評価がGoogleスプレッドシートに1行ずつ集まるようになります。",
+  "tags": ["振り返り", "低学年", "学級経営", "Google Apps Script", "クラス共有", "スプレッドシート"]
+}

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>今日のふりかえり（文しょうで書く）</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+    background: #f3f6fb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 520px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 28px 26px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 22px; text-align: center; }
+
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 6px;
+  }
+  .field .hint {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 6px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 80px;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 2px solid #cbd5e1;
+    font-family: inherit;
+    resize: vertical;
+  }
+  textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+
+  #saveBtn {
+    width: 100%;
+    margin-top: 6px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+  }
+  #saveBtn:active { transform: scale(0.98); }
+
+  #savedMsg {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    min-height: 18px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>今日のふりかえり</h1>
+    <div class="sub">今日の学習を振り返って、自分の言葉で書いてみましょう</div>
+
+    <div class="field">
+      <label>① わかったこと・できるようになったこと</label>
+      <span class="hint">今日の学習で理解できたことを書きましょう</span>
+      <textarea id="q1" placeholder="例：分数のたし算のしかたが分かった"></textarea>
+    </div>
+
+    <div class="field">
+      <label>② もっと知りたいこと・疑問に思ったこと</label>
+      <span class="hint">気になったこと、まだよく分からないことがあれば</span>
+      <textarea id="q2" placeholder="例：分母がちがう分数のひき算はどうやるのか気になった"></textarea>
+    </div>
+
+    <div class="field">
+      <label>③ 次にがんばりたいこと</label>
+      <span class="hint">次の授業や家庭学習で取り組みたいこと</span>
+      <textarea id="q3" placeholder="例：練習問題をもっと解いて慣れたい"></textarea>
+    </div>
+
+    <button id="saveBtn" type="button">きろくする</button>
+    <div id="savedMsg"></div>
+  </div>
+
+<script>
+  const NOTES_KEY = 'reflection-text-midgrade';
+  function safeGet(key){ try{ return localStorage.getItem(key); } catch(e){ return null; } }
+  function safeSet(key, val){ try{ localStorage.setItem(key, val); } catch(e){} }
+
+  const q1 = document.getElementById('q1');
+  const q2 = document.getElementById('q2');
+  const q3 = document.getElementById('q3');
+  const saveBtn = document.getElementById('saveBtn');
+  const savedMsg = document.getElementById('savedMsg');
+
+  function loadSaved(){
+    const raw = safeGet(NOTES_KEY);
+    if(!raw) return;
+    try{
+      const data = JSON.parse(raw);
+      q1.value = data.q1 || '';
+      q2.value = data.q2 || '';
+      q3.value = data.q3 || '';
+    } catch(e) {}
+  }
+
+  saveBtn.addEventListener('click', () => {
+    if(!q1.value.trim() && !q2.value.trim() && !q3.value.trim()){
+      savedMsg.textContent = 'どれか1つは書いてみましょう';
+      savedMsg.style.color = '#dc2626';
+      return;
+    }
+    safeSet(NOTES_KEY, JSON.stringify({ q1: q1.value, q2: q2.value, q3: q3.value }));
+    savedMsg.textContent = '記録しました！';
+    savedMsg.style.color = '#16a34a';
+  });
+
+  loadSaved();
+</script>
+</body>
+</html>

@@ -629,6 +629,29 @@ function IconStarShine(p: IconProps) {
   );
 }
 
+function IconStarRating(p: IconProps) {
+  const star = (cx: number) =>
+    `M${cx} 15 L${cx + 2.1} 20.3 L${cx + 7.8} 20.8 L${cx + 3.4} 24.6 L${cx + 4.8} 30.2 L${cx} 27 L${cx - 4.8} 30.2 L${cx - 3.4} 24.6 L${cx - 7.8} 20.8 L${cx - 2.1} 20.3 Z`;
+  return (
+    <IconBase {...p}>
+      <path d={star(9)} fill="currentColor" fillOpacity="0.85" stroke="none" />
+      <path d={star(20)} fill="currentColor" fillOpacity="0.85" stroke="none" />
+      <path d={star(31)} fill="currentColor" fillOpacity="0.85" stroke="none" />
+    </IconBase>
+  );
+}
+
+function IconWritingLines(p: IconProps) {
+  return (
+    <IconBase {...p}>
+      <rect x="6" y="6" width="28" height="28" rx="3" />
+      <line x1="11" y1="15" x2="29" y2="15" />
+      <line x1="11" y1="21" x2="25" y2="21" />
+      <line x1="11" y1="27" x2="21" y2="27" />
+    </IconBase>
+  );
+}
+
 const MATERIAL_ICON_MAP: Record<string, (props: IconProps) => ReactNode> = {
   "kuku-drill": IconMultiplyBadge,
   "pref-quiz": IconMapPin,
@@ -678,6 +701,8 @@ const MATERIAL_ICON_MAP: Record<string, (props: IconProps) => ReactNode> = {
   "subject-predicate-g2": IconSentenceUnderline,
   "idiom-proverb-quiz-g4": IconScroll,
   "keigo-basics-g5": IconBowPerson,
+  "reflection-stars-lowgrade": IconStarRating,
+  "reflection-text-midgrade": IconWritingLines,
 };
 
 export function MaterialIcon({ slug, className }: { slug: string; className?: string }) {

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>今日のふりかえり（★でひょうか）</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  body {
+    margin: 0;
+    font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", -apple-system, sans-serif;
+    background: #FBF6EC;
+    color: #2E3440;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 480px;
+    background: #ffffff;
+    border-radius: 22px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    padding: 30px 26px;
+    text-align: center;
+  }
+  h1 { font-size: 22px; margin: 0 0 6px; color: #376C96; }
+  .sub { color: #6B6A62; font-size: 13px; margin-bottom: 26px; }
+
+  .question {
+    margin-bottom: 26px;
+    text-align: left;
+  }
+  .question .q-text {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #2E3440;
+  }
+  .stars {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+  }
+  .star-btn {
+    font-size: 40px;
+    line-height: 1;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #D9D2C2;
+    transition: all 0.15s ease-out;
+  }
+  .star-btn.filled { color: #E8B84B; }
+  .star-btn:active { transform: scale(0.9); }
+
+  #saveBtn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    border: none;
+    border-radius: 14px;
+    background: #4F8FBF;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #376C96;
+    transition: all 0.15s ease-out;
+  }
+  #saveBtn:active { transform: translateY(4px); box-shadow: 0 0 0 #376C96; }
+
+  #savedMsg {
+    margin-top: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #4F8A4B;
+    min-height: 20px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>今日のふりかえり</h1>
+    <div class="sub">★をタップして きろくしよう</div>
+
+    <div class="question" data-q="q1">
+      <div class="q-text">① 今日の べんきょうは たのしかった？</div>
+      <div class="stars" data-for="q1">
+        <button class="star-btn" data-value="1" type="button">★</button>
+        <button class="star-btn" data-value="2" type="button">★</button>
+        <button class="star-btn" data-value="3" type="button">★</button>
+        <button class="star-btn" data-value="4" type="button">★</button>
+        <button class="star-btn" data-value="5" type="button">★</button>
+      </div>
+    </div>
+
+    <div class="question" data-q="q2">
+      <div class="q-text">② せんせいの はなしを よく きけた？</div>
+      <div class="stars" data-for="q2">
+        <button class="star-btn" data-value="1" type="button">★</button>
+        <button class="star-btn" data-value="2" type="button">★</button>
+        <button class="star-btn" data-value="3" type="button">★</button>
+        <button class="star-btn" data-value="4" type="button">★</button>
+        <button class="star-btn" data-value="5" type="button">★</button>
+      </div>
+    </div>
+
+    <div class="question" data-q="q3">
+      <div class="q-text">③ がんばって とりくめた？</div>
+      <div class="stars" data-for="q3">
+        <button class="star-btn" data-value="1" type="button">★</button>
+        <button class="star-btn" data-value="2" type="button">★</button>
+        <button class="star-btn" data-value="3" type="button">★</button>
+        <button class="star-btn" data-value="4" type="button">★</button>
+        <button class="star-btn" data-value="5" type="button">★</button>
+      </div>
+    </div>
+
+    <button id="saveBtn" type="button">きろくする</button>
+    <div id="savedMsg"></div>
+  </div>
+
+<script>
+  const NOTES_KEY = 'reflection-stars-lowgrade';
+  function safeGet(key){ try{ return localStorage.getItem(key); } catch(e){ return null; } }
+  function safeSet(key, val){ try{ localStorage.setItem(key, val); } catch(e){} }
+
+  const ratings = { q1: 0, q2: 0, q3: 0 };
+
+  function applyStars(question, value){
+    const group = document.querySelector(`.stars[data-for="${question}"]`);
+    group.querySelectorAll('.star-btn').forEach((btn) => {
+      const v = Number(btn.dataset.value);
+      btn.classList.toggle('filled', v <= value);
+    });
+  }
+
+  document.querySelectorAll('.stars').forEach((group) => {
+    const question = group.dataset.for;
+    group.querySelectorAll('.star-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const value = Number(btn.dataset.value);
+        ratings[question] = value;
+        applyStars(question, value);
+      });
+    });
+  });
+
+  function loadSaved(){
+    const raw = safeGet(NOTES_KEY);
+    if(!raw) return;
+    try{
+      const data = JSON.parse(raw);
+      ['q1', 'q2', 'q3'].forEach((q) => {
+        if(data[q]){
+          ratings[q] = data[q];
+          applyStars(q, data[q]);
+        }
+      });
+    } catch(e) {}
+  }
+
+  const saveBtn = document.getElementById('saveBtn');
+  const savedMsg = document.getElementById('savedMsg');
+
+  saveBtn.addEventListener('click', () => {
+    if(ratings.q1 === 0 || ratings.q2 === 0 || ratings.q3 === 0){
+      savedMsg.textContent = 'すべての しつもんに ★をつけてね';
+      savedMsg.style.color = '#B4552F';
+      return;
+    }
+    safeSet(NOTES_KEY, JSON.stringify(ratings));
+    savedMsg.textContent = 'きろくしました！おつかれさま！';
+    savedMsg.style.color = '#4F8A4B';
+  });
+
+  loadSaved();
+</script>
+</body>
+</html>
