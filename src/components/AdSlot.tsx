@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import Script from "next/script";
 
 type AdSlotProps = {
   slot: string;
@@ -41,11 +40,14 @@ export function AdSlot({ slot, className }: AdSlotProps) {
 
   return (
     <>
-      <Script
+      {/* next/scriptのafterInteractiveだと初期HTMLにはlink rel="preload"しか
+          出力されず、実際のscriptタグはJS実行後にDOMへ追加される。AdSenseの
+          サイト連携確認は生のHTMLでこのタグを探すため、あえて素のscriptタグ
+          として出力する。 */}
+      <script
         async
         src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`}
         crossOrigin="anonymous"
-        strategy="afterInteractive"
       />
       <ins
         className={`adsbygoogle block ${className ?? ""}`}
